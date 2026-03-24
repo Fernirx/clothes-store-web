@@ -191,3 +191,44 @@ tr:hover td{background:#fafafa}
 .cmt-prod{font-size:11px;color:var(--muted)}
 .cmt-body{font-size:12px;color:var(--text2);line-height:1.6;margin-left:36px}
 .cmt-reply{margin-left:36px;margin-top:6px;padding:8px 10px;background:#fafafa;border-left:2px solid #e5e5e5;border-radius:4px;font-size:11px;color:var(--text2)}
+
+/* USERS */
+.user-main{display:flex;align-items:center;gap:8px}
+.user-name{font-weight:700;color:var(--text)}
+.user-email{font-size:11px;color:var(--muted)}
+.login-method{font-size:11px}
+.num-center{text-align:center}
+.user-date{font-size:11px;color:var(--muted)}
+
+/* SUPPLIERS */
+.supplier-contact{font-size:10px;color:var(--muted)}
+.supplier-phone{font-size:12px}
+.supplier-email{font-size:11px;color:var(--muted)}
+
+/* NOTIFICATIONS */
+.notif-side-card{align-self:start}
+.notif-categories{display:flex;flex-direction:column;gap:4px}
+.notif-category-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:6px;cursor:pointer}
+.notif-category-item.on{background:var(--bg)}
+.notif-category-name{font-size:12px}
+.notif-category-item.on .notif-category-name{font-weight:600}
+.notif-count-muted{font-size:11px;color:var(--muted)}
+.notif-side-footer{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.notif-create-btn{width:100%;justify-content:center}
+.notif-bg-blue{background:#dbeafe}
+.notif-bg-yellow{background:#fef9c3}
+.notif-bg-green{background:var(--success-bg)}
+.notif-bg-purple{background:#f3e8ff}
+.notif-bg-gray{background:#f3f4f6}
+.notif-main{flex:1}
+.notif-meta{text-align:right}
+.notif-tag{margin-top:4px}
+
+/* INVENTORY */
+.inv-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.inv-muted{color:var(--muted)}
+.sc.sc-danger::before{background:var(--danger)}
+.inv-danger-text{color:var(--danger)}
+.inv-card-actions{display:flex;gap:6px}
+.inv-select-sm{font-size:11px;padding:4px 8px}
+.inv-supplier-cell{font-size:12px}
