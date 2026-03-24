@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import StatCard from '../../components/StatCard'; // Nhớ đường dẫn này nhé
+import StatCard from '../../components/StatCard'; 
 
 export default function Dashboard() {
 
@@ -29,8 +29,6 @@ export default function Dashboard() {
         }
       });
     }
-
-    // Xóa biểu đồ cũ khi chuyển sang trang khác để không bị lỗi
     return () => {
       if (myChart) myChart.destroy();
     };
@@ -38,7 +36,7 @@ export default function Dashboard() {
 
   return (
     <div className="page-content">
-      {/* 4 THẺ THỐNG KÊ (Dùng StatCard component cho gọn) */}
+  
       <div className="stats">
         <StatCard title="Doanh thu tháng" value="284.5M" change="12.4% tháng trước" isUp={true} colorClass="c1" />
         <StatCard title="Đơn hàng" value="1,247" change="8.1% tháng trước" isUp={true} colorClass="c2" />
@@ -47,19 +45,15 @@ export default function Dashboard() {
       </div>
 
       <div className="g2">
-        {/* BIỂU ĐỒ */}
         <div className="card">
           <div className="card-hd">
             <span className="card-ttl">Doanh thu 7 ngày</span>
             <span className="card-act">Chi tiết →</span>
           </div>
-          {/* Cần thẻ div bọc ngoài để chỉnh chiều cao biểu đồ */}
           <div style={{ height: '200px' }}>
             <canvas id="chart-revenue"></canvas>
           </div>
         </div>
-
-        {/* ĐƠN HÀNG GẦN ĐÂY */}
         <div className="card">
           <div className="card-hd">
             <span className="card-ttl">Đơn hàng gần đây</span>
@@ -74,7 +68,6 @@ export default function Dashboard() {
       </div>
 
       <div className="g3">
-        {/* BÁN CHẠY */}
         <div className="card">
           <div className="card-hd"><span className="card-ttl">Bán chạy</span><span className="card-act">Xem →</span></div>
           <div className="sum-row"><span style={{ width: '18px', textAlign: 'center', color: 'var(--muted)', fontSize: '11px' }}>1</span><div className="pthumb">👕</div><div style={{ flex: 1 }}><div style={{ fontSize: '12px', fontWeight: 600 }}>Áo thun basic nam</div><div className="pbar"><div className="pbar-fill" style={{ width: '100%' }}></div></div></div><span style={{ fontWeight: 700, fontSize: '12px' }}>247</span></div>
@@ -83,7 +76,6 @@ export default function Dashboard() {
           <div className="sum-row"><span style={{ width: '18px', textAlign: 'center', color: 'var(--muted)', fontSize: '11px' }}>4</span><div className="pthumb">🧥</div><div style={{ flex: 1 }}><div style={{ fontSize: '12px', fontWeight: 600 }}>Áo khoác bomber</div><div className="pbar"><div className="pbar-fill" style={{ width: '48%' }}></div></div></div><span style={{ fontWeight: 700, fontSize: '12px' }}>119</span></div>
         </div>
 
-        {/* TỒN KHO SẮP HẾT */}
         <div className="card">
           <div className="card-hd"><span className="card-ttl">Tồn kho sắp hết</span><span className="card-act">Nhập hàng →</span></div>
           <div className="sum-row"><span className="dot dot-red"></span><span style={{ flex: 1, fontSize: '12px' }}>Áo thun Đỏ / M</span><span className="stock-crit">2</span></div>
@@ -93,7 +85,6 @@ export default function Dashboard() {
           <div className="sum-row"><span className="dot dot-green"></span><span style={{ flex: 1, fontSize: '12px' }}>Polo Hồng / XL</span><span className="stock-good">18</span></div>
         </div>
 
-        {/* HOẠT ĐỘNG */}
         <div className="card">
           <div className="card-hd"><span className="card-ttl">Hoạt động</span></div>
           <div className="act-item"><div className="act-dot-w"><div className="act-dot2"></div><div className="act-line"></div></div><div style={{ flex: 1 }}><div className="act-txt">Đơn ORD-00891 đã giao thành công</div></div><span className="act-t">2 phút</span></div>
