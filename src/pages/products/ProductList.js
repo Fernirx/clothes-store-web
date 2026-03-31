@@ -1,39 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function ProductList() {
-  const productsData = [
-    { 
-      id: "SP001", name: "Áo thun basic nam", sub: "Cotton 100% · Nam · 5 màu", icon: "👕",
-      brand: "Uniqlo", price: "199.000đ", stock: 2, sold: 247, 
-      badges: ["SALE"], status: "Hiển thị",
-      stockClass: "stock-crit", statusClass: "b-active"
-    },
-    { 
-      id: "SP002", name: "Quần jean slim fit", sub: "Denim · Nam · 3 màu", icon: "👖",
-      brand: "Zara", price: "450.000đ", stock: 8, sold: 198, 
-      badges: ["NEW"], status: "Hiển thị",
-      stockClass: "stock-warn", statusClass: "b-active"
-    },
-    { 
-      id: "SP003", name: "Váy hoa midi nữ", sub: "Voan · Nữ · 4 màu", icon: "👗",
-      brand: "H&M", price: "380.000đ", stock: 45, sold: 154, 
-      badges: ["NEW", "SALE"], status: "Hiển thị",
-      stockClass: "stock-good", statusClass: "b-active"
-    },
-    { 
-      id: "SP004", name: "Áo khoác bomber", sub: "Polyester · Unisex · 2 màu", icon: "🧥",
-      brand: "Zara", price: "650.000đ", stock: 6, sold: 119, 
-      badges: [], status: "Hiển thị",
-      stockClass: "stock-warn", statusClass: "b-active"
-    },
-    { 
-      id: "SP005", name: "Áo polo nữ", sub: "Cotton · Nữ · 6 màu", icon: "🩱",
-      brand: "Uniqlo", price: "280.000đ", stock: 32, sold: 84, 
-      badges: [], status: "Ẩn",
-      stockClass: "stock-good", statusClass: "b-inactive"
-    }
-  ];
-
+  const [products, setProducts] = useState([]);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/clothes/api/v1/products");
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        
+        const result = await response.json();
+        if (result.data && result.data.content) {
+          setProducts(result.data.content);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu:", error);
+      }
+    };
+    fetchProducts();
+  }, []);
+ console.log (products) ;
   return (
     <div className="page-content">
       <div className="filters">
@@ -53,41 +40,59 @@ export default function ProductList() {
                 <th>Mã</th>
                 <th>Thương hiệu</th>
                 <th>Giá</th>
-                <th>Tồn kho</th>
                 <th>Đã bán</th>
                 <th>Badges</th>
                 <th>Trạng thái</th>
                 <th></th>
               </tr>
             </thead>
-            <tbody>
-              {productsData.map((p, index) => (
-                <tr key={index}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                      <div className="pthumb">{p.icon}</div>
-                      <div>
-                        <div className="td-b">{p.name}</div>
-                        <div style={{ fontSize: '10px', color: 'var(--muted)' }}>{p.sub}</div>
+            <tbody>            
+              {products.map((p, index) => {               
+                const badges = [];
+                if (p.isNew) badges.push('NEW');
+                if (p.isOnSale) badges.push('SALE');              
+                const genderText = p.gender === "MALE" ? "Nam" : p.gender === "FEMALE" ? "Nữ" : "Unisex";               
+                // Format giá tiền Việt Nam
+                const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.basePrice);
+
+                return (
+                  <tr key={p.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                        <div className="pthumb">🛍️</div>
+                        <div>
+                          <div className="td-b">{p.name}</div>
+                          <div style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                            {p.material || 'Chưa cập nhật'} · {genderText}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="td-mono">{p.id}</td>
-                  <td style={{ fontSize: '12px' }}>{p.brand}</td>
-                  <td className="td-b">{p.price}</td>
-                  <td><span className={p.stockClass}>{p.stock}</span></td>
-                  <td>{p.sold}</td>
-                  <td>
-                    {p.badges.length > 0 ? p.badges.map((b, i) => (
-                      <span key={i} className={`badge ${b === 'SALE' ? 'b-sale' : 'b-new'}`} style={{ marginRight: '4px' }}>
-                        {b}
+                    </td>
+                    <td className="td-mono">{p.code}</td>
+                    <td style={{ fontSize: '12px' }}>{p.brandName}</td>
+                    <td className="td-b">{formattedPrice}</td>
+                    <td>{p.soldCount}</td>
+                    <td>
+                      {badges.length > 0 ? badges.map((b, i) => (
+                        <span key={i} className={`badge ${b === 'SALE' ? 'b-sale' : 'b-new'}`} style={{ marginRight: '4px' }}>
+                          {b}
+                        </span>
+                      )) : '—'}
+                    </td>
+                    <td>
+                      <span className={`badge ${p.isActive ? "b-active" : "b-inactive"}`}>
+                        {p.isActive ? "Hiển thị" : "Ẩn"}
                       </span>
-                    )) : '—'}
-                  </td>
-                  <td><span className={`badge ${p.statusClass}`}>{p.status}</span></td>
-                  <td><button className="btn btn-sm">Sửa</button></td>
+                    </td>
+                    <td><button className="btn btn-sm">Sửa</button></td>
+                  </tr>
+                );
+              })}
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Đang tải dữ liệu...</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
