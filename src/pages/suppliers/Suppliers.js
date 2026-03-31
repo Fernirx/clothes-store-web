@@ -6,19 +6,19 @@ export default function Suppliers() {
     useEffect(() => {
         const fetchSuppliers = async () => {
             try {
-                const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/suppliers");
-                
+				console.log(process.env.REACT_APP_ROOT_API);
+              	 const response = await fetch(`${process.env.REACT_APP_ROOT_API}api/v1/suppliers`);   
+				 console.log("response:", response.message);            
                 if (!response.ok) {
                     throw new Error("HTTP error " + response.status);
                 }
-
                 const result = await response.json();
-                
                 if (result.data && result.data.content) {
                     setSuppliers(result.data.content);
                 } else if (Array.isArray(result.data)) {
                     setSuppliers(result.data);
                 }
+				
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu nhà cung cấp:", error);
             }
