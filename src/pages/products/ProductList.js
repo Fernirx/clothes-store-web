@@ -5,11 +5,11 @@ export default function ProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/clothes/api/v1/products");
+        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products");
         if (!response.ok) {
           throw new Error("HTTP error " + response.status);
         }
-        
+
         const result = await response.json();
         if (result.data && result.data.content) {
           setProducts(result.data.content);
@@ -20,7 +20,7 @@ export default function ProductList() {
     };
     fetchProducts();
   }, []);
- console.log (products) ;
+  console.log(products);
   return (
     <div className="page-content">
       <div className="filters">
@@ -46,12 +46,12 @@ export default function ProductList() {
                 <th></th>
               </tr>
             </thead>
-            <tbody>            
-              {products.map((p, index) => {               
+            <tbody>
+              {products.map((p, index) => {
                 const badges = [];
                 if (p.isNew) badges.push('NEW');
-                if (p.isOnSale) badges.push('SALE');              
-                const genderText = p.gender === "MALE" ? "Nam" : p.gender === "FEMALE" ? "Nữ" : "Unisex";               
+                if (p.isOnSale) badges.push('SALE');
+                const genderText = p.gender === "MALE" ? "Nam" : p.gender === "FEMALE" ? "Nữ" : "Unisex";
                 // Format giá tiền Việt Nam
                 const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.basePrice);
 
