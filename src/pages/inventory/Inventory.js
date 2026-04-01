@@ -1,191 +1,122 @@
-import React from 'react';
-
-const variantStockData = [
-	{
-		variant: 'Áo thun / Đỏ / M',
-		sku: 'SP001-RED-M',
-		stock: '2',
-		stockClass: 'stock-crit',
-		minimum: '5',
-		status: 'Nguy hiểm',
-		statusClass: 'b-cancelled',
-	},
-	{
-		variant: 'Quần jean / Đen / 30',
-		sku: 'SP002-BLK-30',
-		stock: '1',
-		stockClass: 'stock-crit',
-		minimum: '5',
-		status: 'Nguy hiểm',
-		statusClass: 'b-cancelled',
-	},
-	{
-		variant: 'Váy hoa / Trắng / S',
-		sku: 'SP003-WHT-S',
-		stock: '4',
-		stockClass: 'stock-warn',
-		minimum: '5',
-		status: 'Sắp hết',
-		statusClass: 'b-pending',
-	},
-	{
-		variant: 'Áo khoác / Navy / L',
-		sku: 'SP004-NVY-L',
-		stock: '3',
-		stockClass: 'stock-warn',
-		minimum: '5',
-		status: 'Sắp hết',
-		statusClass: 'b-pending',
-	},
-	{
-		variant: 'Áo thun / Xanh / L',
-		sku: 'SP001-BLU-L',
-		stock: '28',
-		stockClass: 'stock-good',
-		minimum: '5',
-		status: 'Đủ hàng',
-		statusClass: 'b-active',
-	},
-	{
-		variant: 'Polo / Hồng / XL',
-		sku: 'SP005-PNK-XL',
-		stock: '18',
-		stockClass: 'stock-good',
-		minimum: '5',
-		status: 'Đủ hàng',
-		statusClass: 'b-active',
-	},
-];
-
-const purchaseReceiptsData = [
-	{
-		code: 'PUR-00043',
-		supplier: 'Công ty A',
-		total: '12.5M',
-		status: 'Hoàn tất',
-		statusClass: 'b-completed',
-	},
-	{
-		code: 'PUR-00042',
-		supplier: 'Xưởng B',
-		total: '8.2M',
-		status: 'Đang về',
-		statusClass: 'b-shipping',
-	},
-	{
-		code: 'PUR-00041',
-		supplier: 'Công ty A',
-		total: '20.1M',
-		status: 'Hoàn tất',
-		statusClass: 'b-completed',
-	},
-	{
-		code: 'PUR-00040',
-		supplier: 'NCC C',
-		total: '5.7M',
-		status: 'Nháp',
-		statusClass: 'b-draft',
-	},
-];
+import React, { useState, useEffect } from 'react';
 
 export default function Inventory() {
-	return (
-		<div className="page-content">
-			<div className="stats inv-stats">
-				<div className="sc c1">
-					<div className="sc-label">Tổng SKU</div>
-					<div className="sc-val">284</div>
-					<div className="sc-ch inv-muted">Tất cả biến thể</div>
-				</div>
+    // State lưu trữ danh sách phiếu kiểm kê
+    const [adjustmentTickets, setAdjustmentTickets] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-				<div className="sc sc-danger">
-					<div className="sc-label">SKU cần nhập</div>
-					<div className="sc-val inv-danger-text">12</div>
-					<div className="sc-ch dn">Dưới mức tối thiểu</div>
-				</div>
+    useEffect(() => {
+        const fetchAdjustmentData = async () => {
+            try {
+                // Sửa URL: Lấy danh sách phiếu thay vì lấy 1 phiếu cụ thể bằng {id}
+                const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/stock-adjustments");
+                
+                if (!response.ok) {
+                    throw new Error("HTTP error " + response.status);
+                }
 
-				<div className="sc c3">
-					<div className="sc-label">Phiếu nhập tháng</div>
-					<div className="sc-val">8</div>
-					<div className="sc-ch up">Tổng 48.5M đ</div>
-				</div>
-			</div>
+                const result = await response.json();
+                
+                // Logic xử lý giống code Suppliers của bạn
+                if (result.data && result.data.content) {
+                    setAdjustmentTickets(result.data.content);
+                } else if (Array.isArray(result.data)) {
+                    setAdjustmentTickets(result.data);
+                } else if (result.data) {
+                    // Trong trường hợp API vẫn trả về 1 object đơn lẻ, ta bọc nó vào mảng
+                    setAdjustmentTickets([result.data]);
+                } else {
+                    setAdjustmentTickets([]);
+                }
 
-			<div className="g2">
-				<div className="card">
-					<div className="card-hd">
-						<span className="card-ttl">Tồn kho theo variant</span>
-						<div className="inv-card-actions">
-							<select className="f-select inv-select-sm" defaultValue="Tất cả sản phẩm">
-								<option value="Tất cả sản phẩm">Tất cả sản phẩm</option>
-								<option value="SP001">SP001</option>
-								<option value="SP002">SP002</option>
-							</select>
-						</div>
-					</div>
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu phiếu kiểm kê:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-					<div className="tbl-wrap">
-						<table>
-							<thead>
-								<tr>
-									<th>Variant</th>
-									<th>SKU</th>
-									<th>Tồn kho</th>
-									<th>Tối thiểu</th>
-									<th>Trạng thái</th>
-								</tr>
-							</thead>
-							<tbody>
-								{variantStockData.map((item) => (
-									<tr key={item.sku}>
-										<td className="td-b">{item.variant}</td>
-										<td className="td-mono">{item.sku}</td>
-										<td>
-											<span className={item.stockClass}>{item.stock}</span>
-										</td>
-										<td>{item.minimum}</td>
-										<td>
-											<span className={`badge ${item.statusClass}`}>{item.status}</span>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				</div>
+        fetchAdjustmentData();
+    }, []);
 
-				<div className="card">
-					<div className="card-hd">
-						<span className="card-ttl">Phiếu nhập gần đây</span>
-						<span className="card-act">Tất cả →</span>
-					</div>
+    // Hàm format thời gian
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleString('vi-VN');
+    };
 
-					<div className="tbl-wrap">
-						<table>
-							<thead>
-								<tr>
-									<th>Mã phiếu</th>
-									<th>NCC</th>
-									<th>Tổng tiền</th>
-									<th>Trạng thái</th>
-								</tr>
-							</thead>
-							<tbody>
-								{purchaseReceiptsData.map((receipt) => (
-									<tr key={receipt.code}>
-										<td className="td-mono">{receipt.code}</td>
-										<td className="inv-supplier-cell">{receipt.supplier}</td>
-										<td className="td-b">{receipt.total}</td>
-										<td>
-											<span className={`badge ${receipt.statusClass}`}>{receipt.status}</span>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+    // Hàm xác định class CSS cho trạng thái phiếu
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'DRAFT': return 'b-draft'; 
+            case 'CONFIRMED': return 'b-completed';
+            default: return 'b-pending';
+        }
+    };
+
+    return (
+        <div className="page-content">
+            {/* ... Giữ nguyên phần Thống kê (stats) và Bảng 1 (Tồn kho theo variant) ... */}
+
+            <div className="g2">
+                {/* ... Bảng 1 ... */}
+
+                {/* BẢNG 2: DANH SÁCH PHIẾU KIỂM KÊ */}
+                <div className="card">
+                    <div className="card-hd">
+                        <span className="card-ttl">Danh sách Phiếu Kiểm kê / Điều chỉnh</span>
+                        <span className="card-act">Tất cả →</span>
+                    </div>
+
+                    <div className="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Loại</th>
+                                    <th>Trạng thái</th>
+                                    <th>Lý do</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Cập nhật lần cuối</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Đang tải dữ liệu...</td>
+                                    </tr>
+                                ) : adjustmentTickets.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Không có dữ liệu phiếu kiểm kê</td>
+                                    </tr>
+                                ) : (
+                                    adjustmentTickets.map((ticket) => (
+                                        <tr key={ticket.id}>
+                                            <td className="td-mono td-b">{ticket.code}</td>
+                                            <td>{ticket.type === 'STOCKTAKE' ? 'Kiểm kê' : 'Điều chỉnh'}</td>
+                                            <td>
+                                                <span className={`badge ${getStatusClass(ticket.status)}`}>
+                                                    {ticket.status}
+                                                </span>
+                                            </td>
+                                            <td className="inv-muted" style={{ fontSize: '12px' }}>
+                                                {ticket.reason || '—'}
+                                            </td>
+                                            <td style={{ fontSize: '12px' }}>
+                                                {formatDate(ticket.createdAt)}
+                                            </td>
+                                            <td style={{ fontSize: '12px' }}>
+                                                {formatDate(ticket.updatedAt)}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
