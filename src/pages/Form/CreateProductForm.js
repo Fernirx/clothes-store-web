@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./style.css";
 
 const PRESET_COLORS = [
@@ -25,6 +26,7 @@ const makeVariant = (i) => ({
 });
 
 export default function CreateProductForm() {
+  const navigate = useNavigate();
   const [variants, setVariants] = useState([makeVariant(0)]);
   const [defaultVariantIndex, setDefaultVariantIndex] = useState(0);
   const [gender, setGender] = useState("UNISEX");
@@ -199,9 +201,10 @@ export default function CreateProductForm() {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const { name, code, brand, category, basePrice } = form;
 
+    // 1. Kiểm tra điều kiện bắt buộc
     if (!name || !code || !brand || !category || !basePrice) {
       alert("Vui lòng điền đầy đủ thông tin bắt buộc (*)");
       return;
@@ -210,7 +213,6 @@ export default function CreateProductForm() {
     const hasInvalid = variants.some(
       (v) =>
         !v.color.trim() ||
-        v.images.length === 0 ||
         v.sizes.length === 0 ||
         v.sizes.some((s) => !s.size.trim() || !s.sku.trim())
     );
@@ -219,50 +221,66 @@ export default function CreateProductForm() {
       setShowVariantError(true);
       return;
     }
-
     setShowVariantError(false);
 
-    const orderedVariants = [...variants];
-    const [def] = orderedVariants.splice(defaultVariantIndex, 1);
-    orderedVariants.unshift(def);
-
-    const payload = {
-      name,
-      code,
-      brandId: form.brand,
-      categoryId: form.category,
-      gender,
-      basePrice: +form.basePrice,
-      originalPrice: +form.originalPrice || null,
-      costPrice: +form.costPrice || null,
-      material: form.material,
-      originCountry: form.origin,
-      description: form.desc,
-      images: orderedVariants.map((v) => ({
-        color: v.color,
-        colorHex: v.colorHex,
-        files: v.images.map((img, idx) => ({
-          isPrimary: img.primary,
-          displayOrder: idx,
-          fileName: img.file.name,
-        })),
-      })),
-      variants: orderedVariants.flatMap((v, colorIdx) =>
-        v.sizes.map((s) => ({
-          color: v.color,
-          colorHex: v.colorHex,
-          size: s.size,
-          sku: s.sku,
-          stockQuantity: s.stock,
-          displayOrder: colorIdx,
-          price: null,
-        }))
-      ),
+    // 2. Format dữ liệu cho khớp với API
+    const generateSlug = (str) => {
+      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     };
 
-    console.log("📦 Payload:", payload);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    let apiGender = "UNISEX";
+    if (gender === "MEN") apiGender = "MALE";
+    if (gender === "WOMEN") apiGender = "FEMALE";
+    if (gender === "KIDS") apiGender = "KIDS";
+
+    // 3. Tạo Payload chuẩn (Ép kiểu chuỗi thành số cho các ID và Giá)
+    const payload = {
+      brandId: parseInt(form.brand, 10) || 0,// Đảm bảo value của option là số (id)
+      code: form.code,
+      slug: generateSlug(form.name),
+      name: form.name,
+      description: form.desc,
+      gender: apiGender,  
+      material: form.material,
+      originCountry: form.origin,
+      basePrice: Number(form.basePrice) || 0,
+      originalPrice: Number(form.originalPrice) || 0,
+      costPrice: Number(form.costPrice) || 0,
+      isNew: true,
+      isOnSale: false,
+      isActive: true,
+      categoryIds: [Number(form.category)] // API yêu cầu mảng
+    };
+
+    console.log("📦 Đang gửi Payload:", payload);
+
+    // 4. Gọi API POST
+    try {
+      const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Lỗi HTTP: " + response.status);
+      }
+
+      // 5. Xử lý sau khi thành công
+      setShowToast(true);
+      
+      // Đợi 2 giây để user nhìn thấy thông báo thành công, sau đó chuyển hướng
+      setTimeout(() => {
+        setShowToast(false);
+        navigate("/products"); // Đổi "/products" thành đường dẫn thực tế của trang ProductLists của bạn
+      }, 2000);
+
+    } catch (error) {
+      console.error("Lỗi khi tạo sản phẩm:", error);
+      alert("Tạo sản phẩm thất bại. Vui lòng thử lại!");
+    }
   };
 
   return (
@@ -271,7 +289,7 @@ export default function CreateProductForm() {
         <div className="pf-header">
           <div className="pf-header-icon">👕</div>
           <div>
-            <h1>Tạo sản phẩm mới</h1>
+            <h1>Lưu</h1>
             <p>Mỗi biến thể = 1 màu · Mỗi màu có nhiều size · Ảnh dùng chung cho cùng màu</p>
           </div>
         </div>
@@ -312,12 +330,13 @@ export default function CreateProductForm() {
                 onChange={(e) => updateForm("brand", e.target.value)}
               >
                 <option value="">— Chọn thương hiệu —</option>
-                <option value="Zara">Zara</option>
-                <option value="H&M">H&amp;M</option>
-                <option value="Uniqlo">Uniqlo</option>
-                <option value="Nike">Nike</option>
+                {/* BẮT BUỘC ĐỔI VALUE THÀNH SỐ */}
+                <option value="1">Zara</option> 
+                <option value="2">H&M</option>
+                <option value="3">Uniqlo</option>
+                <option value="4">Nike</option>
               </select>
-            </div>
+           </div>
 
             <div className="pf-field">
               <label>
@@ -328,10 +347,11 @@ export default function CreateProductForm() {
                 onChange={(e) => updateForm("category", e.target.value)}
               >
                 <option value="">— Chọn danh mục —</option>
-                <option value="Áo thun">Áo thun</option>
-                <option value="Áo sơ mi">Áo sơ mi</option>
-                <option value="Quần jean">Quần jean</option>
-                <option value="Váy">Váy</option>
+                {/* BẮT BUỘC ĐỔI VALUE THÀNH SỐ */}
+                <option value="1">Áo thun</option>
+                <option value="2">Áo sơ mi</option>
+                <option value="3">Quần jean</option>
+                <option value="4">Váy</option>
               </select>
             </div>
 
@@ -697,7 +717,7 @@ export default function CreateProductForm() {
             Hủy
           </button>
           <button type="button" className="btn-submit" onClick={handleSubmit}>
-            Tạo sản phẩm
+           LƯU
           </button>
         </div>
       </div>
