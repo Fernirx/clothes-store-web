@@ -4,7 +4,10 @@ export default function Suppliers() {
     const [suppliers, setSuppliers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // STATE CHO FORM THÊM MỚI (INLINE FORM)
+    // State theo dõi xem đang sửa nhà cung cấp nào (null = đang ở chế độ Thêm mới)
+    const [editingId, setEditingId] = useState(null);
+
+    // STATE CHO FORM THÊM MỚI/CẬP NHẬT (INLINE FORM)
     const [formData, setFormData] = useState({
         name: '',
         code: '',
@@ -49,50 +52,90 @@ export default function Suppliers() {
         }));
     };
 
-    // 2. POST: THÊM NHÀ CUNG CẤP
-    const handleAddSupplier = async (e) => {
+    // 2. XỬ LÝ KHI BẤM NÚT SỬA TRÊN BẢNG
+    const handleEditClick = (supplier) => {
+        setEditingId(supplier.id); // Đánh dấu đang sửa
+        // Đổ dữ liệu lên form
+        setFormData({
+            name: supplier.name || '',
+            code: supplier.code || '',
+            email: supplier.email || '',
+            phone: supplier.phone || '',
+            address: supplier.address || '',
+            isActive: supplier.isActive !== undefined ? supplier.isActive : true
+        });
+        // Cuộn lên đầu trang (nếu danh sách dài)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 3. HỦY BỎ CHẾ ĐỘ SỬA
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setFormData({ name: '', code: '', email: '', phone: '', address: '', isActive: true });
+    };
+
+    // 4. SUBMIT FORM: XỬ LÝ CẢ THÊM MỚI (POST) VÀ CẬP NHẬT (PUT)
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Validate cơ bản
         if (!formData.name.trim()) {
             alert("Vui lòng nhập Tên nhà cung cấp!");
             return;
         }
 
-        try {
-            const response = await fetch(`${apiUrl}/api/v1/suppliers`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+        if (editingId) {
+            // === LOGIC CẬP NHẬT (PUT) ===
+            try {
+                const response = await fetch(`${apiUrl}/api/v1/suppliers/${editingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
 
-            if (!response.ok) {
-                throw new Error("Thêm thất bại, mã lỗi: " + response.status);
+                if (!response.ok) throw new Error("Cập nhật thất bại, mã lỗi: " + response.status);
+
+                // Cập nhật lại dữ liệu trong mảng hiện tại để render lại UI ngay lập tức
+                const updatedSuppliers = suppliers.map(supplier => 
+                    supplier.id === editingId ? { ...supplier, ...formData } : supplier
+                );
+                setSuppliers(updatedSuppliers);
+                
+                alert(`Đã cập nhật thành công nhà cung cấp: ${formData.name}`);
+                handleCancelEdit(); // Reset form về chế độ thêm mới
+
+            } catch (error) {
+                console.error("Lỗi khi cập nhật nhà cung cấp:", error);
+                alert("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại!");
             }
 
-            const result = await response.json();
-            const newSupplier = result.data || formData;
+        } else {
+            // === LOGIC THÊM MỚI (POST) GIỮ NGUYÊN ===
+            try {
+                const response = await fetch(`${apiUrl}/api/v1/suppliers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
 
-            // Thêm data mới vào đầu mảng
-            setSuppliers([newSupplier, ...suppliers]);
-            
-            // Xóa rỗng form sau khi thêm thành công
-            setFormData({ name: '', code: '', email: '', phone: '', address: '', isActive: true });
-            
-            alert(`Đã thêm thành công nhà cung cấp: ${newSupplier.name}`);
+                if (!response.ok) throw new Error("Thêm thất bại, mã lỗi: " + response.status);
 
-        } catch (error) {
-            console.error("Lỗi khi thêm nhà cung cấp:", error);
-            alert("Đã xảy ra lỗi khi thêm. Vui lòng thử lại!");
+                const result = await response.json();
+                const newSupplier = result.data || { ...formData, id: Date.now() }; // Fallback id nếu API không trả về
+
+                setSuppliers([newSupplier, ...suppliers]);
+                setFormData({ name: '', code: '', email: '', phone: '', address: '', isActive: true });
+                alert(`Đã thêm thành công nhà cung cấp: ${formData.name}`);
+
+            } catch (error) {
+                console.error("Lỗi khi thêm nhà cung cấp:", error);
+                alert("Đã xảy ra lỗi khi thêm. Vui lòng thử lại!");
+            }
         }
     };
 
-    // 3. DELETE: XÓA NHÀ CUNG CẤP
+    // 5. DELETE: XÓA NHÀ CUNG CẤP
     const handleDelete = async (id, name) => {
         const isConfirm = window.confirm(`Bạn có chắc chắn muốn xóa nhà cung cấp "${name}" không?`);
-
         if (!isConfirm) return;
 
         try {
@@ -100,15 +143,17 @@ export default function Suppliers() {
                 method: 'DELETE',
             });
 
-            if (!response.ok) {
-                throw new Error("Xóa thất bại, mã lỗi: " + response.status);
-            }
+            if (!response.ok) throw new Error("Xóa thất bại, mã lỗi: " + response.status);
             
             const updatedSuppliers = suppliers.filter(supplier => supplier.id !== id);
             setSuppliers(updatedSuppliers);
 
-            alert(`Đã xóa thành công nhà cung cấp ${name}`);
+            // Nếu đang sửa chính thằng vừa bị xóa thì reset form
+            if (editingId === id) {
+                handleCancelEdit();
+            }
 
+            alert(`Đã xóa thành công nhà cung cấp ${name}`);
         } catch (error) {
             console.error("Lỗi khi xóa nhà cung cấp:", error);
             alert("Đã xảy ra lỗi khi xóa. Vui lòng thử lại!");
@@ -126,8 +171,10 @@ export default function Suppliers() {
                 <input className="f-input" placeholder="Tìm tên, mã nhà cung cấp..." />
             </div>
 
-            {/* ====== FORM THÊM MỚI INLINE (VỊ TRÍ Ô VUÔNG ĐỎ) ====== */}
-            <form onSubmit={handleAddSupplier} className="card" style={{ padding: '15px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', backgroundColor: '#f8f9fa', border: '1px dashed #ced4da' }}>
+            {/* ====== FORM THÊM MỚI / CẬP NHẬT INLINE ====== */}
+            <form onSubmit={handleSubmit} className="card" style={{ padding: '15px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', backgroundColor: editingId ? '#fff3cd' : '#f8f9fa', border: `1px dashed ${editingId ? '#ffc107' : '#ced4da'}` }}>
+                {editingId && <strong style={{color: '#856404', width: '100%'}}>Đang chỉnh sửa nhà cung cấp...</strong>}
+                
                 <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Tên NCC (*)" className="f-input" style={{ flex: '1 1 150px' }} required />
                 <input type="text" name="code" value={formData.code} onChange={handleInputChange} placeholder="Mã NCC" className="f-input" style={{ flex: '1 1 100px' }} />
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="f-input" style={{ flex: '1 1 150px' }} />
@@ -139,9 +186,16 @@ export default function Suppliers() {
                     Hoạt động
                 </label>
                 
-                <button type="submit" className="btn" style={{ backgroundColor: '#0d6efd', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    + Thêm
-                </button>
+                <div style={{display: 'flex', gap: '5px'}}>
+                    <button type="submit" className="btn" style={{ backgroundColor: editingId ? '#28a745' : '#0d6efd', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                        {editingId ? "Lưu thay đổi" : "+ Thêm"}
+                    </button>
+                    {editingId && (
+                        <button type="button" onClick={handleCancelEdit} className="btn" style={{ backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                            Hủy
+                        </button>
+                    )}
+                </div>
             </form>
             {/* ====================================================== */}
 
@@ -190,7 +244,12 @@ export default function Suppliers() {
                                             <td><span className={`badge ${statusClass}`}>{statusText}</span></td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button className="btn btn-sm">Sửa</button>
+                                                    <button 
+                                                        className="btn btn-sm"
+                                                        onClick={() => handleEditClick(supplier)} // Gọi hàm sửa
+                                                    >
+                                                        Sửa
+                                                    </button>
                                                     <button
                                                         className="btn btn-sm"
                                                         style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
