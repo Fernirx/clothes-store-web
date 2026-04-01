@@ -1,6 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'; // Thêm useLocation
-import './App.css'; 
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import './App.css';
 
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
@@ -13,12 +12,12 @@ import Users from './pages/users/Users';
 import Suppliers from './pages/suppliers/Suppliers';
 import Notifications from './pages/notifications/Notifications';
 import Inventory from './pages/inventory/Inventory';
+import CreateProductForm from './pages/Form/CreateProductForm';
 
-// 1. Tạo một component bọc để có thể dùng được useLocation
-function AppContent() {
+function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // 2. Định nghĩa tiêu đề và nút bấm cho từng đường dẫn
   const pageConfig = {
     "/": { title: "Dashboard", button: "Xuất báo cáo" },
     "/orders": { title: "Quản lý đơn hàng", button: "+ Tạo đơn" },
@@ -31,25 +30,34 @@ function AppContent() {
     "/inventory": { title: "Tồn kho", button: "+ Tạo phiếu nhập" },
   };
 
-  const currentConfig = pageConfig[location.pathname] || { title: "StyleAdmin", button: "+ Thêm mới" };
-
+  const currentConfig = pageConfig[location.pathname] || {
+    title: "StyleAdmin",
+    button: "+ Thêm mới",
+  };
+  const handleButtonTopbar = () => {
+    if (location.pathname === "/products") {
+      navigate("/products/form");
+      return;
+    }
+  }
   return (
     <div className="app">
       <Sidebar />
+
       <div className="main">
-        <Topbar 
-          title={currentConfig.title} 
-          buttonText={currentConfig.button} 
-          onButtonClick={() => alert(`Bạn vừa bấm nút ở trang ${currentConfig.title}`)}
+        <Topbar
+          title={currentConfig.title}
+          buttonText={currentConfig.button}
+          onButtonClick={handleButtonTopbar}
         />
-        
+
         <div className="content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/orders" element={<OrderList />} />
             <Route path="/coupons" element={<Coupons />} />
-            <Route path="/products" element={<ProductList />} /> 
-            <Route path="/reviews" element={<Reviews />} /> 
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/reviews" element={<Reviews />} />
             <Route path="/users" element={<Users />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/notifications" element={<Notifications />} />
@@ -60,10 +68,17 @@ function AppContent() {
     </div>
   );
 }
+
 function App() {
   return (
     <Router>
-      <AppContent />
+      <Routes>
+        {/* Trang form riêng, không có sidebar/topbar */}
+        <Route path="/products/form" element={<CreateProductForm />} />
+
+        {/* Các trang admin dùng layout chung */}
+        <Route path="/*" element={<AdminLayout />} />
+      </Routes>
     </Router>
   );
 }

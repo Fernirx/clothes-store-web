@@ -266,20 +266,20 @@ export default function CreateProductForm() {
   };
 
   return (
-    <>
-      <div className="page">
-        <div className="header">
-          <div className="header-icon">👕</div>
+    <div className="create-product-page">
+      <div className="product-form">
+        <div className="pf-header">
+          <div className="pf-header-icon">👕</div>
           <div>
             <h1>Tạo sản phẩm mới</h1>
             <p>Mỗi biến thể = 1 màu · Mỗi màu có nhiều size · Ảnh dùng chung cho cùng màu</p>
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-title">Thông tin cơ bản</div>
-          <div className="grid">
-            <div className="field">
+        <div className="pf-card">
+          <div className="pf-card-title">Thông tin cơ bản</div>
+          <div className="pf-grid">
+            <div className="pf-field">
               <label>
                 Tên sản phẩm <span className="req">*</span>
               </label>
@@ -291,7 +291,7 @@ export default function CreateProductForm() {
               />
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>
                 Mã sản phẩm <span className="req">*</span>
               </label>
@@ -303,7 +303,7 @@ export default function CreateProductForm() {
               />
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>
                 Thương hiệu <span className="req">*</span>
               </label>
@@ -319,7 +319,7 @@ export default function CreateProductForm() {
               </select>
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>
                 Danh mục <span className="req">*</span>
               </label>
@@ -335,7 +335,7 @@ export default function CreateProductForm() {
               </select>
             </div>
 
-            <div className="field col-full">
+            <div className="pf-field pf-col-full">
               <label>Mô tả sản phẩm</label>
               <textarea
                 placeholder="Mô tả chi tiết về sản phẩm..."
@@ -346,10 +346,10 @@ export default function CreateProductForm() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-title">Thuộc tính</div>
-          <div className="grid">
-            <div className="field">
+        <div className="pf-card">
+          <div className="pf-card-title">Thuộc tính</div>
+          <div className="pf-grid">
+            <div className="pf-field">
               <label>Giới tính</label>
               <div className="gender-group">
                 {[
@@ -370,7 +370,7 @@ export default function CreateProductForm() {
               </div>
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>Chất liệu vải</label>
               <input
                 type="text"
@@ -380,7 +380,7 @@ export default function CreateProductForm() {
               />
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>Quốc gia sản xuất</label>
               <input
                 type="text"
@@ -392,10 +392,10 @@ export default function CreateProductForm() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-title">Giá bán</div>
-          <div className="grid">
-            <div className="field">
+        <div className="pf-card">
+          <div className="pf-card-title">Giá bán</div>
+          <div className="pf-grid">
+            <div className="pf-field">
               <label>
                 Giá bán <span className="req">*</span>
               </label>
@@ -411,7 +411,7 @@ export default function CreateProductForm() {
               </div>
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>Giá gốc (trước giảm)</label>
               <div className="price-prefix">
                 <span>₫</span>
@@ -425,7 +425,7 @@ export default function CreateProductForm() {
               </div>
             </div>
 
-            <div className="field">
+            <div className="pf-field">
               <label>Giá vốn (chỉ admin)</label>
               <div className="price-prefix">
                 <span>₫</span>
@@ -441,13 +441,13 @@ export default function CreateProductForm() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-title">
-            Biến thể &amp; Hình ảnh <span style={{ color: "var(--accent)" }}>*</span>
+        <div className="pf-card">
+          <div className="pf-card-title">
+            Biến thể &amp; Hình ảnh <span style={{ color: "var(--pf-accent)" }}>*</span>
           </div>
 
           <div className="variant-list-header">
-            <span style={{ fontSize: 13, color: "var(--muted)" }}>
+            <span style={{ fontSize: 13, color: "var(--pf-muted)" }}>
               Mỗi biến thể = 1 màu · Thêm nhiều size trong cùng 1 màu · Ảnh dùng chung
             </span>
           </div>
@@ -460,7 +460,7 @@ export default function CreateProductForm() {
               return (
                 <div
                   key={vi}
-                  className={`variant-card`}
+                  className={`variant-card ${isDefault ? "is-default" : ""}`}
                 >
                   <div
                     className={`variant-card-header ${v.open ? "is-open" : ""}`}
@@ -481,10 +481,10 @@ export default function CreateProductForm() {
                         {v.images.length > 0 ? `${v.images.length} ảnh` : "Chưa có ảnh"}
                       </span>
 
+                      {isDefault && <span className="default-badge">MẶC ĐỊNH</span>}
                     </div>
 
                     <div className="variant-header-right">
-
                       <button
                         type="button"
                         className="btn-remove-variant"
@@ -527,8 +527,8 @@ export default function CreateProductForm() {
                               padding: "4px",
                               borderRadius: "8px",
                               cursor: "pointer",
-                              background: "var(--surface2)",
-                              border: "1px solid var(--border)",
+                              background: "var(--pf-surface2)",
+                              border: "1px solid var(--pf-border)",
                             }}
                             onChange={(e) => updateColorHex(vi, e.target.value)}
                           />
@@ -546,7 +546,7 @@ export default function CreateProductForm() {
                               borderRadius: "8px",
                               padding: "10px 12px",
                               fontSize: "12px",
-                              color: "var(--accent)",
+                              color: "var(--pf-accent)",
                               lineHeight: 1.4,
                             }}
                           >
@@ -705,6 +705,6 @@ export default function CreateProductForm() {
       <div className={`toast ${showToast ? "show" : ""}`}>
         ✓ Tạo sản phẩm thành công!
       </div>
-    </>
+    </div>
   );
 }
