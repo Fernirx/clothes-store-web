@@ -25,7 +25,7 @@ function AdminLayout() {
     "/coupons": { title: "Khuyến mãi / Coupon", button: "+ Tạo coupon" },
     "/reviews": { title: "Đánh giá & Bình luận", button: "Xuất báo cáo" },
     "/users": { title: "Quản lý người dùng", button: "+ Thêm admin" },
-    "/suppliers": { title: "Nhà cung cấp", button: "+ Thêm nhà cung cấp" },
+    "/suppliers": { title: "Nhà cung cấp"},
     "/notifications": { title: "Thông báo", button: "+ Tạo thông báo" },
     "/inventory": { title: "Tồn kho", button: "+ Tạo phiếu nhập" },
   };
