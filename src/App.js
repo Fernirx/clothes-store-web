@@ -27,7 +27,7 @@ function AdminLayout() {
     "/coupons": { title: "Khuyến mãi / Coupon", button: "+ Tạo coupon" },
     "/reviews": { title: "Đánh giá & Bình luận", button: "Xuất báo cáo" },
     "/users": { title: "Quản lý người dùng", button: "+ Thêm admin" },
-    "/suppliers": { title: "Nhà cung cấp"},
+    "/suppliers": { title: "Nhà cung cấp" },
     "/notifications": { title: "Thông báo", button: "+ Tạo thông báo" },
     "/inventory": { title: "Tồn kho", button: "+ Tạo phiếu nhập" },
   };
@@ -82,11 +82,11 @@ function App() {
 
         {/* Các trang admin dùng layout chung */}
         <Route path="/*" element={<AdminLayout />} />
-        
-       <Route path="/danh-sach-quan-ao" element={<HomeList />} />
 
-       <Route path="/new-arrivals" element={<HomeList />} />
-       <Route path="/new-arrivals" element={<HomeList />} />
+        <Route path="/home" element={<HomeList />} />
+
+        <Route path="/new-arrivals" element={<HomeList />} />
+        <Route path="/new-arrivals" element={<HomeList />} />
         <Route path="/ao-thun" element={<HomeList />} />
         <Route path="/quan-jean" element={<HomeList />} />
         <Route path="/ao-khoac" element={<HomeList />} />

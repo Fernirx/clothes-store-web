@@ -12,7 +12,7 @@ const PRESET_COLORS = [
 ];
 
 const makeSize = () => ({
-  id: null, 
+  id: null,
   size: "",
   sku: "",
   stock: 0, // UI vẫn gọi là stock
@@ -58,7 +58,12 @@ export default function CreateProductForm() {
       name: data.name || "",
       code: data.code || "",
       brand: data.brandId?.toString() || "",
-      category: data.categoryIds?.[0]?.toString() || "",
+      category:
+        data.categoryId?.[0]?.toString() ||
+        data.categoryId?.toString() ||
+        data.categoryIds?.[0]?.toString() ||
+        data.categories?.[0]?.id?.toString() ||
+        "",
       desc: data.description || "",
       material: data.material || "",
       origin: data.originCountry || "",
@@ -80,19 +85,19 @@ export default function CreateProductForm() {
         open: false,
         sizes: v.sizes?.length > 0
           ? v.sizes.map((s) => ({
-              id: s.id || null, 
-              size: s.size || "",
-              sku: s.sku || "",
-              stock: s.stock || 0,
-            }))
+            id: s.id || null,
+            size: s.size || "",
+            sku: s.sku || "",
+            stock: s.stock || 0,
+          }))
           : [makeSize()],
         images: v.images?.length > 0
           ? v.images.map((img, i) => ({
-              dataUrl: img.dataUrl || img.url,
-              file: null,
-              primary: img.isPrimary || i === 0,
-              imageId: img.imageId || img.id,
-            }))
+            dataUrl: img.dataUrl || img.url,
+            file: null,
+            primary: img.isPrimary || i === 0,
+            imageId: img.imageId || img.id,
+          }))
           : [],
       }));
       setVariants(mappedVariants);
@@ -119,13 +124,13 @@ export default function CreateProductForm() {
       const productJson = await productRes.json();
       const variantsJson = variantsRes.ok ? await variantsRes.json() : { data: [] };
       const imagesJson = imagesRes.ok ? await imagesRes.json() : { data: [] };
-      
+
       const productData = productJson.data ? productJson.data : productJson;
       const rawVariants = variantsJson.data || [];
       const rawImages = imagesJson.data || [];
-      
+
       const groupedVariants = {};
-      
+
       rawVariants.forEach(variant => {
         const colorName = variant.color || "Default";
         if (!groupedVariants[colorName]) {
@@ -138,14 +143,14 @@ export default function CreateProductForm() {
           };
         }
         groupedVariants[colorName].sizes.push({
-          id: variant.id || null, 
+          id: variant.id || null,
           size: variant.size || "",
           sku: variant.sku || "",
           // ĐÃ SỬA: Lấy chữ stockQuantity từ API về gán cho stock của UI
-          stock: variant.stockQuantity || 0 
+          stock: variant.stockQuantity || 0
         });
       });
-      
+
       rawImages.forEach(img => {
         const colorName = img.color || "Default";
         if (!groupedVariants[colorName]) {
@@ -164,9 +169,11 @@ export default function CreateProductForm() {
           imageId: img.id
         });
       });
-      
+
       productData.variants = Object.values(groupedVariants);
       console.log("Dữ liệu sau khi gom nhóm 3 API:", productData);
+      console.log("productData::::", productData);
+
       mapDataToForm(productData);
     } catch (error) {
       console.error("Lỗi khi tải chi tiết sản phẩm:", error);
@@ -310,10 +317,10 @@ export default function CreateProductForm() {
 
   const handleSubmit = async () => {
     let apiGender = "UNISEX";
-    if (gender === "MEN") apiGender = "MEN"; 
+    if (gender === "MEN") apiGender = "MEN";
     if (gender === "WOMEN") apiGender = "WOMEN";
     if (gender === "KIDS") apiGender = "KIDS";
-    
+
     const generateSlug = (str) => {
       return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
     };
@@ -336,9 +343,9 @@ export default function CreateProductForm() {
       isActive: true,
       categoryId: [Number(form.category)],
     };
-
+    console.log("Payload sản phẩm sẽ gửi lên API:", productPayload);
     try {
-     
+
       const productUrl = isEditMode
         ? `https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${id}`
         : "https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products";
@@ -352,7 +359,7 @@ export default function CreateProductForm() {
       if (!productRes.ok) throw new Error("Lỗi HTTP: " + productRes.status);
 
       const savedProductData = await productRes.json();
-      
+
       const currentProductId = isEditMode ? id : (savedProductData.id || savedProductData.data?.id);
 
       if (!currentProductId) {
@@ -366,7 +373,7 @@ export default function CreateProductForm() {
         v.sizes.forEach((s) => {
           if (!s.size.trim() || !s.sku.trim()) return;
 
-           
+
           const variantPayload = {
             productId: Number(currentProductId),
             color: v.color,
@@ -417,6 +424,7 @@ export default function CreateProductForm() {
       alert(`${isEditMode ? "Cập nhật" : "Tạo"} sản phẩm thất bại. Vui lòng bật F12 xem Console!`);
     }
   };
+  console.log("data form", form);
 
   return (
     <div className="create-product-page">
@@ -470,8 +478,8 @@ export default function CreateProductForm() {
                 <option value="">— Chọn thương hiệu —</option>
                 <option value="1">Zara</option>
                 <option value="2">H&M</option>
-                <option value="3">Uniqlo</option>
-                <option value="4">Nike</option>
+                <option value="4">Uniqlo</option>
+                <option value="3">Nike</option>
               </select>
             </div>
 
@@ -484,9 +492,10 @@ export default function CreateProductForm() {
                 onChange={(e) => updateForm("category", e.target.value)}
               >
                 <option value="">— Chọn danh mục —</option>
-                <option value="1">Áo</option>
-                <option value="2">Quần</option>
-                <option value="3">Váy</option>
+                <option value="1">test</option>
+                <option value="2">Áo</option>
+                <option value="3">Quần</option>
+                <option value="4">Váy</option>
               </select>
             </div>
 
@@ -516,9 +525,8 @@ export default function CreateProductForm() {
                   <button
                     type="button"
                     key={item.value}
-                    className={`gender-pill ${
-                      gender === item.value ? "active" : ""
-                    }`}
+                    className={`gender-pill ${gender === item.value ? "active" : ""
+                      }`}
                     onClick={() => setGender(item.value)}
                   >
                     {item.label}
@@ -830,9 +838,8 @@ export default function CreateProductForm() {
                         {v.images.map((img, ii) => (
                           <div
                             key={ii}
-                            className={`img-thumb ${
-                              img.primary ? "is-primary" : ""
-                            }`}
+                            className={`img-thumb ${img.primary ? "is-primary" : ""
+                              }`}
                             onClick={() => setPrimary(vi, ii)}
                             title="Click để đặt làm ảnh chính"
                           >
