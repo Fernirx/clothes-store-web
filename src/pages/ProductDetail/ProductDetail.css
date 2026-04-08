@@ -1,0 +1,185 @@
+/* Layout tổng cho phần chi tiết sản phẩm */
+.product-detail-container {
+  display: flex;
+  padding: 40px 50px;
+  gap: 60px;
+  background-color: #ffffff;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* CỘT TRÁI: HÌNH ẢNH */
+.product-gallery {
+  display: flex;
+  gap: 20px;
+  flex: 6; /* Chiếm 6 phần không gian */
+}
+
+.thumbnail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.thumbnail-item {
+  width: 60px;
+  height: 80px;
+  border-radius: 8px;
+  cursor: pointer;
+  object-fit: cover;
+  background-color: #f5f5f7;
+  transition: opacity 0.2s;
+}
+
+.thumbnail-item:hover {
+  opacity: 0.7;
+}
+
+.thumbnail-item.active {
+  border: 1px solid #111;
+}
+
+.main-image {
+  flex: 1;
+  background-color: #f5f5f7;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* CỘT PHẢI: THÔNG TIN SẢN PHẨM */
+.product-info-panel {
+  flex: 4; /* Chiếm 4 phần không gian */
+  display: flex;
+  flex-direction: column;
+}
+
+.sustainability-tag {
+  color: #d9381e;
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.product-title {
+  font-size: 28px;
+  font-weight: 500;
+  color: #111;
+  margin: 0 0 4px 0;
+}
+
+.product-category {
+  font-size: 16px;
+  color: #707072;
+  margin: 0 0 20px 0;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #707072;
+  margin-right: 12px;
+  font-weight: 400;
+}
+
+.discount-tag {
+  color: #008a00;
+}
+
+/* CHỌN KÍCH THƯỚC */
+.size-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.size-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.size-btn {
+  padding: 14px 0;
+  border: 1px solid #e5e5e5;
+  background: white;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.size-btn:hover {
+  border-color: #111;
+}
+
+.size-btn.selected {
+  border-color: #111;
+  box-shadow: inset 0 0 0 1px #111;
+}
+
+/* NÚT BẤM (Nike Style) */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.btn-add-cart, .btn-buy-now {
+  width: 100%;
+  padding: 18px;
+  border-radius: 30px; /* Bo tròn cực mạnh chuẩn Nike */
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s;
+}
+
+.btn-add-cart {
+  background-color: #111;
+  color: white;
+}
+
+.btn-add-cart:hover {
+  background-color: #333;
+}
+
+.btn-buy-now {
+  background-color: white;
+  color: #111;
+  border: 1px solid #cecece;
+}
+
+.btn-buy-now:hover {
+  border-color: #111;
+}
+
+/* MÔ TẢ SẢN PHẨM */
+.product-description p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #111;
+}
+
+.product-description ul {
+  padding-left: 20px;
+  color: #111;
+  line-height: 1.8;
+}

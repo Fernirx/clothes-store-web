@@ -1,0 +1,132 @@
+/* Cấu trúc layout tổng thể chứa Sidebar và Topbar */
+.layout-wrapper {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f5f7; /* Màu nền xám nhạt đặc trưng của Apple */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Khu vực nội dung chính mang phong cách Apple */
+.apple-style-container {
+  padding: 40px 50px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.apple-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 30px;
+}
+
+.apple-header h1 {
+  font-size: 44px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.apple-header a {
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.apple-header a:hover {
+  text-decoration: underline;
+}
+
+/* Lưới sản phẩm cuộn ngang */
+.product-carousel {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding-bottom: 30px;
+  /* Scroll snap giúp cuộn mượt và dừng đúng thẻ */
+  scroll-snap-type: x mandatory; 
+}
+
+/* Ẩn thanh cuộn cho đẹp (tuỳ chọn) */
+.product-carousel::-webkit-scrollbar {
+  height: 8px;
+}
+.product-carousel::-webkit-scrollbar-thumb {
+  background-color: #d2d2d7;
+  border-radius: 10px;
+}
+
+/* Thẻ sản phẩm */
+.product-card {
+  flex: 0 0 340px; /* Cố định chiều rộng thẻ */
+  scroll-snap-align: start;
+  cursor: pointer;
+}
+
+.image-box {
+  background-color: #ffffff;
+  border-radius: 28px; /* Bo góc cực lớn chuẩn Apple */
+  height: 420px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.product-card:hover .image-box {
+  transform: scale(1.01);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+.image-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Các chấm màu */
+.color-variants {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0 16px 0;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Thông tin Text */
+.product-info {
+  text-align: center;
+}
+
+.product-name {
+  font-size: 21px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 6px 0;
+}
+
+.product-tagline {
+  font-size: 15px;
+  color: #86868b;
+  margin: 0;
+  font-weight: 400;
+}

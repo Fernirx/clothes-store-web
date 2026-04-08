@@ -13,7 +13,8 @@ import Suppliers from './pages/suppliers/Suppliers';
 import Notifications from './pages/notifications/Notifications';
 import Inventory from './pages/inventory/Inventory';
 import CreateProductForm from './pages/Form/CreateProductForm';
-
+import HomeList from './pages/home/HomeList';
+import ProductDetail from './pages/ProductDetail/ProductDetail';
 function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -79,6 +80,19 @@ function App() {
 
         {/* Các trang admin dùng layout chung */}
         <Route path="/*" element={<AdminLayout />} />
+        
+       <Route path="/danh-sach-quan-ao" element={<HomeList />} />
+
+       <Route path="/new-arrivals" element={<HomeList />} />
+       <Route path="/new-arrivals" element={<HomeList />} />
+        <Route path="/ao-thun" element={<HomeList />} />
+        <Route path="/quan-jean" element={<HomeList />} />
+        <Route path="/ao-khoac" element={<HomeList />} />
+        <Route path="/vay-dam" element={<HomeList />} />
+        <Route path="/phu-kien" element={<HomeList />} />
+        <Route path="/sale" element={<HomeList />} />
+        <Route path="/san-pham/:id" element={<ProductDetail />} />
+
       </Routes>
     </Router>
   );

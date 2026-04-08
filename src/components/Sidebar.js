@@ -26,7 +26,7 @@ export default function Sidebar() {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M6 4V3M6 13v-1M10 4V3M10 13v-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
           Khuyến mãi / Coupon
         </NavLink>
-
+        
         <div className="sb-sec">Sản phẩm</div>
         <NavLink to="/products" className={({ isActive }) => isActive ? "sb-item on" : "sb-item"}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
