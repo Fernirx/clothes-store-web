@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./style.css";
 
 const PRESET_COLORS = [
@@ -12,9 +12,10 @@ const PRESET_COLORS = [
 ];
 
 const makeSize = () => ({
+  id: null, 
   size: "",
   sku: "",
-  stock: 0,
+  stock: 0, // UI vẫn gọi là stock
 });
 
 const makeVariant = (i) => ({
@@ -27,6 +28,12 @@ const makeVariant = (i) => ({
 
 export default function CreateProductForm() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+
+  const isEditMode = Boolean(id);
+  const productDataFromList = location.state?.productData;
+
   const [variants, setVariants] = useState([makeVariant(0)]);
   const [defaultVariantIndex, setDefaultVariantIndex] = useState(0);
   const [gender, setGender] = useState("UNISEX");
@@ -46,6 +53,127 @@ export default function CreateProductForm() {
     costPrice: "",
   });
 
+  const mapDataToForm = (data) => {
+    setForm({
+      name: data.name || "",
+      code: data.code || "",
+      brand: data.brandId?.toString() || "",
+      category: data.categoryIds?.[0]?.toString() || "",
+      desc: data.description || "",
+      material: data.material || "",
+      origin: data.originCountry || "",
+      basePrice: data.basePrice?.toString() || "",
+      originalPrice: data.originalPrice?.toString() || "",
+      costPrice: data.costPrice?.toString() || "",
+    });
+
+    let mappedGender = "UNISEX";
+    if (data.gender === "MALE") mappedGender = "MEN";
+    if (data.gender === "FEMALE") mappedGender = "WOMEN";
+    if (data.gender === "KIDS") mappedGender = "KIDS";
+    setGender(mappedGender);
+
+    if (data.variants && data.variants.length > 0) {
+      const mappedVariants = data.variants.map((v, index) => ({
+        color: v.color || "",
+        colorHex: v.colorHex || PRESET_COLORS[index % PRESET_COLORS.length],
+        open: false,
+        sizes: v.sizes?.length > 0
+          ? v.sizes.map((s) => ({
+              id: s.id || null, 
+              size: s.size || "",
+              sku: s.sku || "",
+              stock: s.stock || 0,
+            }))
+          : [makeSize()],
+        images: v.images?.length > 0
+          ? v.images.map((img, i) => ({
+              dataUrl: img.dataUrl || img.url,
+              file: null,
+              primary: img.isPrimary || i === 0,
+              imageId: img.imageId || img.id,
+            }))
+          : [],
+      }));
+      setVariants(mappedVariants);
+    }
+  };
+
+  useEffect(() => {
+    if (isEditMode) {
+      console.log("Đang ở chế độ Edit, gọi API lấy chi tiết sản phẩm...");
+      fetchProductDetail(id);
+    }
+  }, [id, isEditMode]);
+
+  const fetchProductDetail = async (productId) => {
+    try {
+      const [productRes, variantsRes, imagesRes] = await Promise.all([
+        fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${productId}`),
+        fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants/by-product/${productId}`),
+        fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/images/by-product/${productId}`)
+      ]);
+
+      if (!productRes.ok) throw new Error("Không thể tải thông tin sản phẩm gốc");
+
+      const productJson = await productRes.json();
+      const variantsJson = variantsRes.ok ? await variantsRes.json() : { data: [] };
+      const imagesJson = imagesRes.ok ? await imagesRes.json() : { data: [] };
+      
+      const productData = productJson.data ? productJson.data : productJson;
+      const rawVariants = variantsJson.data || [];
+      const rawImages = imagesJson.data || [];
+      
+      const groupedVariants = {};
+      
+      rawVariants.forEach(variant => {
+        const colorName = variant.color || "Default";
+        if (!groupedVariants[colorName]) {
+          groupedVariants[colorName] = {
+            color: colorName,
+            colorHex: variant.colorHex || "#cccccc",
+            sizes: [],
+            images: [],
+            open: false
+          };
+        }
+        groupedVariants[colorName].sizes.push({
+          id: variant.id || null, 
+          size: variant.size || "",
+          sku: variant.sku || "",
+          // ĐÃ SỬA: Lấy chữ stockQuantity từ API về gán cho stock của UI
+          stock: variant.stockQuantity || 0 
+        });
+      });
+      
+      rawImages.forEach(img => {
+        const colorName = img.color || "Default";
+        if (!groupedVariants[colorName]) {
+          groupedVariants[colorName] = {
+            color: colorName,
+            colorHex: img.colorHex || "#cccccc",
+            sizes: [makeSize()],
+            images: [],
+            open: false
+          };
+        }
+        groupedVariants[colorName].images.push({
+          dataUrl: img.imageUrl,
+          file: null,
+          primary: img.isPrimary || false,
+          imageId: img.id
+        });
+      });
+      
+      productData.variants = Object.values(groupedVariants);
+      console.log("Dữ liệu sau khi gom nhóm 3 API:", productData);
+      mapDataToForm(productData);
+    } catch (error) {
+      console.error("Lỗi khi tải chi tiết sản phẩm:", error);
+      alert("Không thể tải thông tin sản phẩm để sửa!");
+    }
+  };
+
   const updateForm = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -56,13 +184,10 @@ export default function CreateProductForm() {
 
   const removeVariant = (i) => {
     if (variants.length === 1) return;
-
     const newVariants = variants.filter((_, index) => index !== i);
-
     let newDefaultIndex = defaultVariantIndex;
     if (defaultVariantIndex === i) newDefaultIndex = 0;
     else if (defaultVariantIndex > i) newDefaultIndex = defaultVariantIndex - 1;
-
     setVariants(newVariants);
     setDefaultVariantIndex(newDefaultIndex);
   };
@@ -94,7 +219,6 @@ export default function CreateProductForm() {
       prev.map((variant, index) => {
         if (index !== vi) return variant;
         if (variant.sizes.length === 1) return variant;
-
         return {
           ...variant,
           sizes: variant.sizes.filter((_, sizeIndex) => sizeIndex !== si),
@@ -107,15 +231,11 @@ export default function CreateProductForm() {
     setVariants((prev) =>
       prev.map((variant, index) => {
         if (index !== vi) return variant;
-
         return {
           ...variant,
           sizes: variant.sizes.map((size, sizeIndex) =>
             sizeIndex === si
-              ? {
-                ...size,
-                [field]: field === "stock" ? +value : value,
-              }
+              ? { ...size, [field]: field === "stock" ? +value : value }
               : size
           ),
         };
@@ -142,23 +262,17 @@ export default function CreateProductForm() {
   const handleFiles = (vi, files) => {
     Array.from(files).forEach((file) => {
       if (!file.type.startsWith("image/")) return;
-
       const reader = new FileReader();
       reader.onload = (e) => {
         setVariants((prev) =>
           prev.map((variant, index) => {
             if (index !== vi) return variant;
-
             const newImage = {
               dataUrl: e.target.result,
               file,
               primary: variant.images.length === 0,
             };
-
-            return {
-              ...variant,
-              images: [...variant.images, newImage],
-            };
+            return { ...variant, images: [...variant.images, newImage] };
           })
         );
       };
@@ -170,17 +284,11 @@ export default function CreateProductForm() {
     setVariants((prev) =>
       prev.map((variant, index) => {
         if (index !== vi) return variant;
-
         const nextImages = variant.images.filter((_, imgIndex) => imgIndex !== ii);
-
         if (nextImages.length > 0 && !nextImages.some((img) => img.primary)) {
           nextImages[0] = { ...nextImages[0], primary: true };
         }
-
-        return {
-          ...variant,
-          images: nextImages,
-        };
+        return { ...variant, images: nextImages };
       })
     );
   };
@@ -189,7 +297,6 @@ export default function CreateProductForm() {
     setVariants((prev) =>
       prev.map((variant, index) => {
         if (index !== vi) return variant;
-
         return {
           ...variant,
           images: variant.images.map((img, imgIndex) => ({
@@ -202,45 +309,23 @@ export default function CreateProductForm() {
   };
 
   const handleSubmit = async () => {
-    const { name, code, brand, category, basePrice } = form;
-
-    // 1. Kiểm tra điều kiện bắt buộc
-    if (!name || !code || !brand || !category || !basePrice) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc (*)");
-      return;
-    }
-
-    const hasInvalid = variants.some(
-      (v) =>
-        !v.color.trim() ||
-        v.sizes.length === 0 ||
-        v.sizes.some((s) => !s.size.trim() || !s.sku.trim())
-    );
-
-    if (hasInvalid) {
-      setShowVariantError(true);
-      return;
-    }
-    setShowVariantError(false);
-
-    // 2. Format dữ liệu cho khớp với API
+    let apiGender = "UNISEX";
+    if (gender === "MEN") apiGender = "MEN"; 
+    if (gender === "WOMEN") apiGender = "WOMEN";
+    if (gender === "KIDS") apiGender = "KIDS";
+    
     const generateSlug = (str) => {
-      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
     };
 
-    let apiGender = "UNISEX";
-    if (gender === "MEN") apiGender = "MALE";
-    if (gender === "WOMEN") apiGender = "FEMALE";
-    if (gender === "KIDS") apiGender = "KIDS";
-
-    // 3. Tạo Payload chuẩn (Ép kiểu chuỗi thành số cho các ID và Giá)
-    const payload = {
-      brandId: parseInt(form.brand, 10) || 0,// Đảm bảo value của option là số (id)
+    // Payload của Product
+    const productPayload = {
+      brandId: parseInt(form.brand, 10) || 0,
       code: form.code,
       slug: generateSlug(form.name),
       name: form.name,
       description: form.desc,
-      gender: apiGender,  
+      gender: apiGender,
       material: form.material,
       originCountry: form.origin,
       basePrice: Number(form.basePrice) || 0,
@@ -249,37 +334,87 @@ export default function CreateProductForm() {
       isNew: true,
       isOnSale: false,
       isActive: true,
-      categoryIds: [Number(form.category)] // API yêu cầu mảng
+      categoryId: [Number(form.category)],
     };
 
-    console.log("📦 Đang gửi Payload:", payload);
-
-    // 4. Gọi API POST
     try {
-      const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+     
+      const productUrl = isEditMode
+        ? `https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${id}`
+        : "https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products";
+
+      const productRes = await fetch(productUrl, {
+        method: isEditMode ? "PUT" : "POST",
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(productPayload),
       });
 
-      if (!response.ok) {
-        throw new Error("Lỗi HTTP: " + response.status);
+      if (!productRes.ok) throw new Error("Lỗi HTTP: " + productRes.status);
+
+      const savedProductData = await productRes.json();
+      
+      const currentProductId = isEditMode ? id : (savedProductData.id || savedProductData.data?.id);
+
+      if (!currentProductId) {
+        throw new Error("Lưu sản phẩm thành công nhưng không lấy được ID trả về");
       }
 
-      // 5. Xử lý sau khi thành công
+      // BƯỚC 2: LƯU BIẾN THỂ
+      const variantPromises = [];
+
+      variants.forEach((v) => {
+        v.sizes.forEach((s) => {
+          if (!s.size.trim() || !s.sku.trim()) return;
+
+           
+          const variantPayload = {
+            productId: Number(currentProductId),
+            color: v.color,
+            colorHex: v.colorHex,
+            size: s.size,
+            sku: s.sku,
+            stockQuantity: Number(s.stock) || 0, // Dùng stockQuantity
+            price: Number(form.basePrice) || 0,  // Thêm price
+            minStockLevel: 0,                    // Thêm minStockLevel
+          };
+
+          if (isEditMode && s.id) {
+            variantPromises.push(
+              fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants/${s.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(variantPayload),
+              })
+            );
+          } else {
+            variantPromises.push(
+              fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(variantPayload),
+              })
+            );
+          }
+        });
+      });
+
+      if (variantPromises.length > 0) {
+        const variantResponses = await Promise.all(variantPromises);
+        const failedVariant = variantResponses.find(res => !res.ok);
+        if (failedVariant) {
+          console.error("Một số biến thể bị lỗi khi lưu:", failedVariant.status);
+        }
+      }
+
       setShowToast(true);
-      
-      // Đợi 2 giây để user nhìn thấy thông báo thành công, sau đó chuyển hướng
       setTimeout(() => {
         setShowToast(false);
-        navigate("/products"); // Đổi "/products" thành đường dẫn thực tế của trang ProductLists của bạn
+        navigate("/products");
       }, 2000);
 
     } catch (error) {
-      console.error("Lỗi khi tạo sản phẩm:", error);
-      alert("Tạo sản phẩm thất bại. Vui lòng thử lại!");
+      console.error("Lỗi khi lưu sản phẩm:", error);
+      alert(`${isEditMode ? "Cập nhật" : "Tạo"} sản phẩm thất bại. Vui lòng bật F12 xem Console!`);
     }
   };
 
@@ -289,8 +424,11 @@ export default function CreateProductForm() {
         <div className="pf-header">
           <div className="pf-header-icon">👕</div>
           <div>
-            <h1>Lưu</h1>
-            <p>Mỗi biến thể = 1 màu · Mỗi màu có nhiều size · Ảnh dùng chung cho cùng màu</p>
+            <h1>{isEditMode ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}</h1>
+            <p>
+              Mỗi biến thể = 1 màu · Mỗi màu có nhiều size · Ảnh dùng chung cho
+              cùng màu
+            </p>
           </div>
         </div>
 
@@ -330,13 +468,12 @@ export default function CreateProductForm() {
                 onChange={(e) => updateForm("brand", e.target.value)}
               >
                 <option value="">— Chọn thương hiệu —</option>
-                {/* BẮT BUỘC ĐỔI VALUE THÀNH SỐ */}
-                <option value="1">Zara</option> 
+                <option value="1">Zara</option>
                 <option value="2">H&M</option>
                 <option value="3">Uniqlo</option>
                 <option value="4">Nike</option>
               </select>
-           </div>
+            </div>
 
             <div className="pf-field">
               <label>
@@ -347,11 +484,9 @@ export default function CreateProductForm() {
                 onChange={(e) => updateForm("category", e.target.value)}
               >
                 <option value="">— Chọn danh mục —</option>
-                {/* BẮT BUỘC ĐỔI VALUE THÀNH SỐ */}
-                <option value="1">Áo thun</option>
-                <option value="2">Áo sơ mi</option>
-                <option value="3">Quần jean</option>
-                <option value="4">Váy</option>
+                <option value="1">Áo</option>
+                <option value="2">Quần</option>
+                <option value="3">Váy</option>
               </select>
             </div>
 
@@ -381,7 +516,9 @@ export default function CreateProductForm() {
                   <button
                     type="button"
                     key={item.value}
-                    className={`gender-pill ${gender === item.value ? "active" : ""}`}
+                    className={`gender-pill ${
+                      gender === item.value ? "active" : ""
+                    }`}
                     onClick={() => setGender(item.value)}
                   >
                     {item.label}
@@ -463,12 +600,14 @@ export default function CreateProductForm() {
 
         <div className="pf-card">
           <div className="pf-card-title">
-            Biến thể &amp; Hình ảnh <span style={{ color: "var(--pf-accent)" }}>*</span>
+            Biến thể &amp; Hình ảnh{" "}
+            <span style={{ color: "var(--pf-accent)" }}>*</span>
           </div>
 
           <div className="variant-list-header">
             <span style={{ fontSize: 13, color: "var(--pf-muted)" }}>
-              Mỗi biến thể = 1 màu · Thêm nhiều size trong cùng 1 màu · Ảnh dùng chung
+              Mỗi biến thể = 1 màu · Thêm nhiều size trong cùng 1 màu · Ảnh dùng
+              chung
             </span>
           </div>
 
@@ -491,17 +630,23 @@ export default function CreateProductForm() {
                         className="color-dot"
                         style={{ background: v.colorHex }}
                       />
-                      <span className="variant-label">{v.color || "Màu ?"}</span>
+                      <span className="variant-label">
+                        {v.color || "Màu ?"}
+                      </span>
 
                       <span className="size-count-badge">
                         {sizeCount > 0 ? `${sizeCount} size` : "Chưa có size"}
                       </span>
 
                       <span className="variant-meta">
-                        {v.images.length > 0 ? `${v.images.length} ảnh` : "Chưa có ảnh"}
+                        {v.images.length > 0
+                          ? `${v.images.length} ảnh`
+                          : "Chưa có ảnh"}
                       </span>
 
-                      {isDefault && <span className="default-badge">MẶC ĐỊNH</span>}
+                      {isDefault && (
+                        <span className="default-badge">MẶC ĐỊNH</span>
+                      )}
                     </div>
 
                     <div className="variant-header-right">
@@ -517,7 +662,9 @@ export default function CreateProductForm() {
                         Xóa
                       </button>
 
-                      <span className={`chevron ${v.open ? "open" : ""}`}>▼</span>
+                      <span className={`chevron ${v.open ? "open" : ""}`}>
+                        ▼
+                      </span>
                     </div>
                   </div>
 
@@ -550,7 +697,9 @@ export default function CreateProductForm() {
                               background: "var(--pf-surface2)",
                               border: "1px solid var(--pf-border)",
                             }}
-                            onChange={(e) => updateColorHex(vi, e.target.value)}
+                            onChange={(e) =>
+                              updateColorHex(vi, e.target.value)
+                            }
                           />
                         </div>
 
@@ -570,12 +719,15 @@ export default function CreateProductForm() {
                               lineHeight: 1.4,
                             }}
                           >
-                            📸 Ảnh upload ở đây sẽ dùng chung cho <strong>tất cả size</strong> của màu này
+                            📸 Ảnh upload ở đây sẽ dùng chung cho{" "}
+                            <strong>tất cả size</strong> của màu này
                           </div>
                         </div>
                       </div>
 
-                      <div className="size-section-label">Size &amp; Tồn kho</div>
+                      <div className="size-section-label">
+                        Size &amp; Tồn kho
+                      </div>
 
                       <div className="size-list">
                         {v.sizes.map((s, si) => (
@@ -643,7 +795,8 @@ export default function CreateProductForm() {
                       </button>
 
                       <span className="upload-label">
-                        Hình ảnh màu {v.color || "?"} · Dùng chung cho tất cả size · Click ảnh để đặt làm ảnh chính
+                        Hình ảnh màu {v.color || "?"} · Dùng chung cho tất cả
+                        size · Click ảnh để đặt làm ảnh chính
                       </span>
 
                       <div
@@ -677,7 +830,9 @@ export default function CreateProductForm() {
                         {v.images.map((img, ii) => (
                           <div
                             key={ii}
-                            className={`img-thumb ${img.primary ? "is-primary" : ""}`}
+                            className={`img-thumb ${
+                              img.primary ? "is-primary" : ""
+                            }`}
                             onClick={() => setPrimary(vi, ii)}
                             title="Click để đặt làm ảnh chính"
                           >
@@ -692,7 +847,9 @@ export default function CreateProductForm() {
                             >
                               ×
                             </button>
-                            {img.primary && <div className="primary-tag">CHÍNH</div>}
+                            {img.primary && (
+                              <div className="primary-tag">CHÍNH</div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -704,26 +861,31 @@ export default function CreateProductForm() {
           </div>
 
           <p className={`error-msg ${showVariantError ? "show" : ""}`}>
-            ⚠ Mỗi biến thể cần có: Màu sắc, ít nhất 1 size (điền Size + SKU), và ít nhất 1 ảnh
+            ⚠ Mỗi biến thể cần có: Màu sắc, ít nhất 1 size (điền Size + SKU), và
+            ít nhất 1 ảnh
           </p>
 
-          <button type="button" className="btn-add-variant" onClick={addVariant}>
+          <button
+            type="button"
+            className="btn-add-variant"
+            onClick={addVariant}
+          >
             + Thêm màu mới
           </button>
         </div>
 
         <div className="actions">
-          <button type="button" className="btn-cancel">
+          <button type="button" className="btn-cancel" onClick={() => navigate("/products")}>
             Hủy
           </button>
           <button type="button" className="btn-submit" onClick={handleSubmit}>
-           LƯU
+            {isEditMode ? "CẬP NHẬT" : "LƯU TẠO MỚI"}
           </button>
         </div>
       </div>
 
       <div className={`toast ${showToast ? "show" : ""}`}>
-        ✓ Tạo sản phẩm thành công!
+        ✓ {isEditMode ? "Cập nhật" : "Tạo"} sản phẩm thành công!
       </div>
     </div>
   );

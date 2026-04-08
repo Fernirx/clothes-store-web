@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
+
+   
+<button 
+  className="btn-add-new"
+  onClick={() => navigate('/products/form')} 
+>
+  + Thêm mới
+</button>
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -20,7 +30,37 @@ export default function ProductList() {
     };
     fetchProducts();
   }, []);
+
+  // --- HÀM XỬ LÝ XÓA SẢN PHẨM ---
+  const handleDelete = async (id, name) => {
+    // 1. Hỏi xác nhận trước khi xóa
+    const isConfirm = window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${name}" không?`);
+    if (!isConfirm) return;
+
+    try {
+      // 2. Gọi API xóa (Thêm id vào cuối link)
+      const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error("Xóa thất bại, mã lỗi: " + response.status);
+      }
+
+      // 3. Cập nhật lại giao diện (Lọc bỏ sản phẩm vừa xóa khỏi state)
+      const updatedProducts = products.filter(product => product.id !== id);
+      setProducts(updatedProducts);
+
+      alert(`Đã xóa thành công sản phẩm: ${name}`);
+
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
+      alert("Đã xảy ra lỗi khi xóa. Vui lòng thử lại!");
+    }
+  };
+
   console.log(products);
+
   return (
     <div className="page-content">
       <div className="filters">
@@ -43,11 +83,11 @@ export default function ProductList() {
                 <th>Đã bán</th>
                 <th>Badges</th>
                 <th>Trạng thái</th>
-                <th></th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p, index) => {
+              {products.map((p) => {
                 const badges = [];
                 if (p.isNew) badges.push('NEW');
                 if (p.isOnSale) badges.push('SALE');
@@ -84,7 +124,20 @@ export default function ProductList() {
                         {p.isActive ? "Hiển thị" : "Ẩn"}
                       </span>
                     </td>
-                    <td><button className="btn btn-sm">Sửa</button></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {/* ĐÃ SỬA: Thay item thành p ở dòng dưới đây */}
+                        <button className="btn btn-sm" onClick={() => navigate(`/products/form/${p.id}`, { state: { productData: p } })} >Sửa</button>
+                        
+                        <button 
+                          className="btn btn-sm" 
+                          style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
+                          onClick={() => handleDelete(p.id, p.name)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}

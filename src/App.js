@@ -73,8 +73,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/products/form/" element={<CreateProductForm />} />
         {/* Trang form riêng, không có sidebar/topbar */}
-        <Route path="/products/form" element={<CreateProductForm />} />
+        <Route path="/products/form/:id" element={<CreateProductForm />} />
 
         {/* Các trang admin dùng layout chung */}
         <Route path="/*" element={<AdminLayout />} />

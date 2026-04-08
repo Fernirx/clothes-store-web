@@ -67,8 +67,6 @@ export default function Suppliers() {
         // Cuộn lên đầu trang (nếu danh sách dài)
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-
-    // 3. HỦY BỎ CHẾ ĐỘ SỬA
     const handleCancelEdit = () => {
         setEditingId(null);
         setFormData({ name: '', code: '', email: '', phone: '', address: '', isActive: true });
@@ -82,19 +80,14 @@ export default function Suppliers() {
             alert("Vui lòng nhập Tên nhà cung cấp!");
             return;
         }
-
         if (editingId) {
-            // === LOGIC CẬP NHẬT (PUT) ===
             try {
                 const response = await fetch(`${apiUrl}/api/v1/suppliers/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-
                 if (!response.ok) throw new Error("Cập nhật thất bại, mã lỗi: " + response.status);
-
-                // Cập nhật lại dữ liệu trong mảng hiện tại để render lại UI ngay lập tức
                 const updatedSuppliers = suppliers.map(supplier => 
                     supplier.id === editingId ? { ...supplier, ...formData } : supplier
                 );
@@ -109,7 +102,6 @@ export default function Suppliers() {
             }
 
         } else {
-            // === LOGIC THÊM MỚI (POST) GIỮ NGUYÊN ===
             try {
                 const response = await fetch(`${apiUrl}/api/v1/suppliers`, {
                     method: 'POST',
