@@ -15,6 +15,7 @@ import Inventory from './pages/inventory/Inventory';
 import CreateProductForm from './pages/Form/CreateProductForm';
 import HomeList from './pages/home/HomeList';
 import ProductDetail from './pages/ProductDetail/ProductDetail';
+import Login from './pages/Login/login';
 function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/login" element={<Login />} />
         <Route path="/products/form/" element={<CreateProductForm />} />
         {/* Trang form riêng, không có sidebar/topbar */}
         <Route path="/products/form/:id" element={<CreateProductForm />} />

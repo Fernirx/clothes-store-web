@@ -1,0 +1,349 @@
+.login-page {
+	min-height: 100vh;
+	display: flex;
+	align-items: stretch;
+	background:
+		radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 28%),
+		linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+	padding: 24px;
+}
+
+.login-split {
+	width: 100%;
+	max-width: 1240px;
+	margin: auto;
+	display: grid;
+	grid-template-columns: 1.1fr 0.9fr;
+	overflow: hidden;
+	border-radius: 28px;
+	box-shadow: 0 30px 70px rgba(15, 23, 42, 0.14);
+	background: rgba(255, 255, 255, 0.6);
+	backdrop-filter: blur(16px);
+}
+
+.login-decor {
+	position: relative;
+	min-height: 680px;
+	padding: 56px;
+	overflow: hidden;
+	background:
+		linear-gradient(135deg, rgba(2, 132, 199, 0.96), rgba(15, 23, 42, 0.94)),
+		radial-gradient(circle at top right, rgba(56, 189, 248, 0.35), transparent 30%);
+	color: #ffffff;
+}
+
+.login-decor::before,
+.login-decor::after {
+	content: '';
+	position: absolute;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	filter: blur(4px);
+}
+
+.login-decor::before {
+	width: 320px;
+	height: 320px;
+	top: -120px;
+	right: -90px;
+}
+
+.login-decor::after {
+	width: 240px;
+	height: 240px;
+	left: -80px;
+	bottom: -70px;
+}
+
+.decor-content {
+	position: relative;
+	z-index: 2;
+	max-width: 420px;
+	margin-top: 110px;
+}
+
+.decor-kicker {
+	display: inline-block;
+	margin: 0 0 16px;
+	padding: 8px 14px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.decor-content h1 {
+	margin: 0 0 18px;
+	font-size: clamp(34px, 4vw, 56px);
+	line-height: 1.05;
+	letter-spacing: -0.04em;
+}
+
+.decor-text {
+	margin: 0 0 28px;
+	font-size: 17px;
+	line-height: 1.7;
+	color: rgba(255, 255, 255, 0.84);
+}
+
+.decor-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.decor-pills span {
+	padding: 10px 14px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	font-weight: 600;
+}
+
+.decor-orb {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(2px);
+	opacity: 0.9;
+}
+
+.decor-orb-one {
+	width: 180px;
+	height: 180px;
+	top: 80px;
+	right: 80px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.45), rgba(56, 189, 248, 0.08));
+	animation: floatOrb 8s ease-in-out infinite;
+}
+
+.decor-orb-two {
+	width: 120px;
+	height: 120px;
+	right: 200px;
+	bottom: 100px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.35), rgba(14, 165, 233, 0.12));
+	animation: floatOrb 10s ease-in-out infinite reverse;
+}
+
+.decor-card {
+	position: absolute;
+	z-index: 2;
+	min-width: 170px;
+	padding: 18px 20px;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.16);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+	animation: floatCard 6s ease-in-out infinite;
+}
+
+.decor-card span {
+	display: block;
+	margin-bottom: 4px;
+	font-size: 24px;
+	font-weight: 800;
+	letter-spacing: -0.03em;
+}
+
+.decor-card p {
+	margin: 0;
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.88);
+}
+
+.decor-card-top {
+	top: 90px;
+	left: 56px;
+}
+
+.decor-card-bottom {
+	right: 60px;
+	bottom: 88px;
+	animation-delay: 1.2s;
+}
+
+.login-card {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 56px;
+	background: rgba(255, 255, 255, 0.92);
+}
+
+.login-card > * {
+	width: 100%;
+	max-width: 420px;
+}
+
+.login-header {
+	margin-bottom: 28px;
+}
+
+.login-badge {
+	display: inline-flex;
+	align-items: center;
+	margin: 0 0 12px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	background: #e0f2fe;
+	color: #0369a1;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.login-header h2 {
+	margin: 0 0 10px;
+	color: #0f172a;
+	font-size: 34px;
+	line-height: 1.15;
+}
+
+.login-description {
+	margin: 0;
+	color: #475569;
+	line-height: 1.65;
+}
+
+.login-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.login-form label {
+	color: #1e293b;
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.login-form input {
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	padding: 13px 14px;
+	font-size: 15px;
+	color: #0f172a;
+	outline: none;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.login-form input:focus {
+	border-color: #0ea5e9;
+	box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.14);
+	transform: translateY(-1px);
+}
+
+.login-form button {
+	margin-top: 12px;
+	border: none;
+	border-radius: 12px;
+	padding: 13px 16px;
+	background: linear-gradient(135deg, #0ea5e9, #0369a1);
+	color: #ffffff;
+	font-size: 15px;
+	font-weight: 800;
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+	box-shadow: 0 12px 28px rgba(14, 165, 233, 0.3);
+}
+
+.login-form button:hover {
+	transform: translateY(-1px);
+	opacity: 0.96;
+}
+
+.login-form button:active {
+	transform: translateY(0);
+}
+
+.login-message {
+	margin: 8px 0 0;
+	color: #0f766e;
+	font-weight: 600;
+}
+
+@keyframes floatOrb {
+	0%,
+	100% {
+		transform: translateY(0) scale(1);
+	}
+	50% {
+		transform: translateY(-18px) scale(1.04);
+	}
+}
+
+@keyframes floatCard {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
+}
+
+@media (max-width: 960px) {
+	.login-page {
+		padding: 0;
+	}
+
+	.login-split {
+		grid-template-columns: 1fr;
+		border-radius: 0;
+		min-height: 100vh;
+	}
+
+	.login-decor {
+		min-height: 360px;
+		padding: 36px 24px;
+	}
+
+	.decor-content {
+		margin-top: 68px;
+	}
+
+	.decor-card-top {
+		top: 24px;
+		left: 24px;
+	}
+
+	.decor-card-bottom {
+		right: 24px;
+		bottom: 24px;
+	}
+
+	.login-card {
+		padding: 36px 24px 42px;
+	}
+}
+
+@media (max-width: 520px) {
+	.login-decor {
+		min-height: 300px;
+	}
+
+	.decor-content h1 {
+		font-size: 30px;
+	}
+
+	.login-header h2 {
+		font-size: 28px;
+	}
+
+	.decor-card {
+		min-width: 142px;
+		padding: 14px 16px;
+	}
+
+	.decor-card span {
+		font-size: 20px;
+	}
+
+	.decor-card p {
+		font-size: 13px;
+	}
+}
