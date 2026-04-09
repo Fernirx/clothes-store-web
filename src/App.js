@@ -55,7 +55,7 @@ function AdminLayout() {
 
         <div className="content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/orders" element={<OrderList />} />
             <Route path="/coupons" element={<Coupons />} />
             <Route path="/products" element={<ProductList />} />
@@ -85,7 +85,7 @@ function App() {
 
         <Route path="/home" element={<HomeList />} />
 
-        <Route path="/new-arrivals" element={<HomeList />} />
+        <Route path="/" element={<HomeList />} />
         <Route path="/new-arrivals" element={<HomeList />} />
         <Route path="/ao-thun" element={<HomeList />} />
         <Route path="/quan-jean" element={<HomeList />} />
