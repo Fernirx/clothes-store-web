@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: clothes-store-web
+    container_name: clothes-web
     ports:
       - "3000:80"
     restart: unless-stopped

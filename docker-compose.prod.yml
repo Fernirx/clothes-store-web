@@ -1,0 +1,7 @@
+services:
+  app:
+    image: fernirx/clothes-web:latest
+    container_name: clothes-web
+    ports:
+      - "3000:80"
+    restart: unless-stopped

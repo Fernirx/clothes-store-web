@@ -1,0 +1,34 @@
+name: CD pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Push to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build & Push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/clothes-web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/clothes-web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
