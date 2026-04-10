@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ProductDetail.css';
-import Sidebar from '../../components/HomeSidebar'; // Trỏ đúng đường dẫn file của bạn
+// import Sidebar from '../../components/HomeSidebar'; // Trỏ đúng đường dẫn file của bạn
 import Topbar from '../../components/HomeTopbar';   // Nơi chứa giỏ hàng
 
 export default function ProductDetail() {
@@ -33,7 +33,7 @@ export default function ProductDetail() {
 
   return (
     <div className="layout-wrapper">
-      <Sidebar />
+      
       <div className="main-content">
         <Topbar /> {/* Giỏ hàng nằm ở góc phải của Topbar này */}
 

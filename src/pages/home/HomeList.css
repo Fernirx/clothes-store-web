@@ -1,9 +1,9 @@
-/* Cấu trúc layout tổng thể chứa Sidebar và Topbar */
+/* Cấu trúc layout tổng thể */
 .layout-wrapper {
   display: flex;
   height: 100vh;
-  background-color: #f5f5f7; /* Màu nền xám nhạt đặc trưng của Apple */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #ffffff; /* Chuyển nền trắng tinh cho giống Nike */
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Font đặc trưng của Nike */
 }
 
 .main-content {
@@ -13,7 +13,7 @@
   overflow: hidden;
 }
 
-/* Khu vực nội dung chính mang phong cách Apple */
+/* Khu vực nội dung chính */
 .apple-style-container {
   padding: 40px 50px;
   overflow-y: auto;
@@ -28,105 +28,120 @@
 }
 
 .apple-header h1 {
-  font-size: 44px;
-  font-weight: 600;
-  color: #1d1d1f;
+  font-size: 32px; /* Thu nhỏ lại một chút cho gọn gàng */
+  font-weight: 500;
+  color: #111;
   margin: 0;
-  letter-spacing: -0.5px;
 }
 
 .apple-header a {
-  color: #0066cc;
+  color: #111;
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .apple-header a:hover {
   text-decoration: underline;
 }
 
-/* Lưới sản phẩm cuộn ngang */
+/* --- LƯỚI SẢN PHẨM CHUẨN NIKE --- */
 .product-carousel {
-  display: flex;
-  gap: 24px;
-  overflow-x: auto;
-  padding-bottom: 30px;
-  /* Scroll snap giúp cuộn mượt và dừng đúng thẻ */
-  scroll-snap-type: x mandatory; 
-}
-
-/* Ẩn thanh cuộn cho đẹp (tuỳ chọn) */
-.product-carousel::-webkit-scrollbar {
-  height: 8px;
-}
-.product-carousel::-webkit-scrollbar-thumb {
-  background-color: #d2d2d7;
-  border-radius: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Đổi từ cuộn ngang sang lưới 3 cột */
+  gap: 16px; /* Khoảng cách giữa các sản phẩm */
+  padding-bottom: 50px;
 }
 
 /* Thẻ sản phẩm */
 .product-card {
-  flex: 0 0 340px; /* Cố định chiều rộng thẻ */
-  scroll-snap-align: start;
+  width: 100%;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Khung chứa ảnh vuông vức */
 .image-box {
-  background-color: #ffffff;
-  border-radius: 28px; /* Bo góc cực lớn chuẩn Apple */
-  height: 420px;
+  background-color: #f6f6f6;
+  border-radius: 0px; /* Bỏ hoàn toàn bo góc */
+  aspect-ratio: 4 / 5; /* Tỉ lệ khung ảnh dọc */
+  height: auto;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.03);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
-  padding: 20px;
+  margin-bottom: 12px;
 }
 
-.product-card:hover .image-box {
-  transform: scale(1.01);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+.product-card:hover .image-box img {
+  transform: scale(1.05); /* Hiệu ứng zoom nhẹ ảnh */
 }
 
 .image-box img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
 }
 
-/* Các chấm màu */
+/* Ẩn các chấm màu */
 .color-variants {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 20px 0 16px 0;
+  display: none; 
 }
 
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid rgba(0,0,0,0.1);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-}
-
-/* Thông tin Text */
+/* --- THÔNG TIN TEXT (CĂN TRÁI) --- */
 .product-info {
-  text-align: center;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-status {
+  color: #9e3500; /* Màu cam đỏ đặc trưng */
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
 }
 
 .product-name {
-  font-size: 21px;
-  font-weight: 600;
-  color: #1d1d1f;
-  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #111;
+  margin: 0;
 }
 
 .product-tagline {
-  font-size: 15px;
-  color: #86868b;
+  font-size: 16px;
+  color: #707072;
   margin: 0;
   font-weight: 400;
+}
+
+.product-price {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111;
+  margin-top: 8px;
+}
+
+/* --- RESPONSIVE CHO ĐIỆN THOẠI / IPAD --- */
+@media (max-width: 1024px) {
+  .product-carousel { grid-template-columns: repeat(2, 1fr); }
+  .apple-style-container { padding: 30px; }
+}
+
+@media (max-width: 768px) {
+  .product-carousel { grid-template-columns: repeat(1, 1fr); }
+  .apple-style-container { padding: 20px; }
+}
+.product-carousel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+}
+.apple-style-container {
+  padding: 40px 50px;
 }
