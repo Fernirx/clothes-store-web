@@ -75,18 +75,19 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* 1. CÁC TRANG FORM ĐỘC LẬP (Không có sidebar/topbar) */}
         <Route path="/login" element={<Login />} />
         <Route path="/products/form/" element={<CreateProductForm />} />
-        {/* Trang form riêng, không có sidebar/topbar */}
         <Route path="/products/form/:id" element={<CreateProductForm />} />
 
-        {/* Các trang admin dùng layout chung */}
-        <Route path="/*" element={<AdminLayout />} />
-
-        <Route path="/home" element={<HomeList />} />
-
+        {/* 2. CÁC TRANG DÀNH CHO KHÁCH HÀNG (Hiển thị HomeList / Chi tiết) */}
         <Route path="/" element={<HomeList />} />
+        <Route path="/home" element={<HomeList />} />
         <Route path="/new-arrivals" element={<HomeList />} />
+        
+        {/* 👉 ĐÂY LÀ DÒNG BỊ THIẾU MÀ MÌNH ĐÃ THÊM VÀO GIÚP BẠN */}
+        <Route path="/danh-sach-quan-ao" element={<HomeList />} /> 
+        
         <Route path="/ao-thun" element={<HomeList />} />
         <Route path="/quan-jean" element={<HomeList />} />
         <Route path="/ao-khoac" element={<HomeList />} />
@@ -94,6 +95,10 @@ function App() {
         <Route path="/phu-kien" element={<HomeList />} />
         <Route path="/sale" element={<HomeList />} />
         <Route path="/san-pham/:id" element={<ProductDetail />} />
+
+        {/* 3. CÁC TRANG ADMIN DÙNG LAYOUT CHUNG */}
+        {/* Luôn để đường dẫn có dấu "/*" ở CUỐI CÙNG của danh sách */}
+        <Route path="/*" element={<AdminLayout />} />
 
       </Routes>
     </Router>

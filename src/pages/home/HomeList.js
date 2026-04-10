@@ -1,42 +1,41 @@
-import React from 'react';
-import './HomeList.css';
-import Sidebar from '../../components/HomeSidebar';
-import Topbar from '../../components/HomeTopbar';
-
+import React, { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import HomeTopbar from '../../components/HomeTopbar';
+import AdsBanner from '../../components/AdsBanner';
+import './HomeList.css';
 
+// Kích hoạt thư viện tạo hiệu ứng AOS
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+
+
+const bannerImages = [
+  'https://cdn.hstatic.net/1000281824/file/img_7821_3cbddeadfa224d8488587aae7c638bad.jpg',
+  'https://cdn.hstatic.net/1000281824/file/degreyy1667_e220f839a785404893a5d66475d1c682.jpg',
+  'https://cdn.hstatic.net/1000281824/file/img_7818_da83504672314801a306fa8c6938d786.jpg' 
+];
+
+// DỮ LIỆU SẢN PHẨM
 const StyleProducts = [
-  {
-    id: 1,
-    name: 'Áo Thun ',
-    tagline: 'Thiết kế sáng tạo cho hiệu năng.',
-    image: 'https://scontent.fsgn5-14.fna.fbcdn.net/v/t39.30808-6/666473757_2254281871770924_6079236901825892768_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=e06c5d&_nc_ohc=7RGVxIUYPkoQ7kNvwEVkOVL&_nc_oc=Adr7eiwvw8nTGj-OPjRL8RlPJuFsdWufWZWPvtI-5xwCznVDdCDo_4fIJNdYio7sFBZeiRR6utXu2HZaPNDNWdam&_nc_zt=23&_nc_ht=scontent.fsgn5-14.fna&_nc_gid=EAzElgWlUJD177eFTSlGAw&_nc_ss=7a3a8&oh=00_Af3i7jza7ii0s-jSZIv2D2teCYkewx94zxdfoc8fjUZJqA&oe=69DCD37A',
-    colors: ['#1d1d1f', '#e3e4e5', '#d4af37'],
-    categoryPath: '/ao-thun' // Đã thêm nhãn danh mục
+  { 
+    id: 1, name: 'Áo', tagline: 'Thiết kế sáng tạo cho hiệu năng.',  
+    image: 'https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/a71c7394-e164-47f5-888d-3499847ea58f/M+NSW+SS+MAX+90+TEE+FR+SU26.png', 
+    colors: ['#1d1d1f', '#e3e4e5', '#d4af37'], categoryPath: '/ao-thun'
   },
-  {
-    id: 2,
-    name: 'Quần Jean ',
-    tagline: 'Mỏng nhẹ nhất từng có.',
-    image: 'https://scontent.fsgn5-14.fna.fbcdn.net/v/t39.30808-6/454638983_3747864042150205_4762410526567005406_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=ukMka2LLSLgQ7kNvwFxUgiO&_nc_oc=Adpj4X2-gm-Z_GaoxiyARWj_dzFGIYgCtsSP9oqdVlqtF-Zag8uOIscZi4yypMtS7k2VmQPw6hrTpdHqsrdAeGwu&_nc_zt=23&_nc_ht=scontent.fsgn5-14.fna&_nc_gid=O1F3VCi-Tth5uYywg3EQTw&_nc_ss=7a3a8&oh=00_Af1-MxdoXT8dsZ6ijj1u4sQ6SokoO95i6K7IE0CgZ_xv8w&oe=69DCE9E2',
-    colors: ['#87ceeb', '#000000'],
-    categoryPath: '/quan-jean' // Đã thêm nhãn danh mục
+  { 
+    id: 2, name: 'Quần ', tagline: 'Mỏng nhẹ nhất từng có.', 
+    image: 'https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/644ffad2-ba92-4c4c-8264-9e75ccf68937/AS+LJ+M+NK+PANT+FK.png', 
+    colors: ['#87ceeb', '#000000'], categoryPath: '/quan-jean'
   },
-  {
-    id: 3,
-    name: 'Áo Khoác ',
-    tagline: 'Thú vị hơn hẳn.',
-    image: 'https://scontent.fsgn5-14.fna.fbcdn.net/v/t39.30808-6/657796140_959412660284659_62029866625303473_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=13d280&_nc_ohc=VI9OlU18M4cQ7kNvwH9MkiJ&_nc_oc=AdqB8v5PIK-6s1pywURMA9a0dXaV2s_F9EpxZrrudfQSI4He8I2bSWuT0akCO9XhrU6KbRRPmoAhwqfk2aSNNVKP&_nc_zt=23&_nc_ht=scontent.fsgn5-14.fna&_nc_gid=Q1sPLP-9WRdZlOmxw83VLQ&_nc_ss=7a3a8&oh=00_Af0XQMxqkuJb91HOHqfVj-cOVOrQb5TNsbzxCerVPtvXsg&oe=69DCD8EF',
-    colors: ['#e8b4b8', '#d6b8e8', '#b8cce8', '#1d1d1f'],
-    categoryPath: '/ao-khoac' // Đã thêm nhãn danh mục
+  { 
+    id: 3, name: 'Áo Khoác', tagline: 'Thú vị hơn hẳn.', 
+    image: 'https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/b9092de0-17db-419d-82d2-7121393bed5b/AS+KB+M+NK+JKT+ASW.png', 
+    colors: ['#e8b4b8', '#d6b8e8', '#b8cce8', '#1d1d1f'], categoryPath: '/ao-khoac'
   },
-  {
-    id: 4,
-    name: 'Polo ',
-    tagline: 'Đủ tính năng. Vừa túi tiền.',
-    image: 'https://scontent.fsgn5-15.fna.fbcdn.net/v/t39.30808-6/665921338_122176352618764749_1303370013299990697_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=13d280&_nc_ohc=5DhdxbK4DnIQ7kNvwG43EOA&_nc_oc=AdpxrxA67cOewvZt4PC-EovsCNx3UjgMbPxWvzJ7r2kdEpbXtiyvv1SMxDichBgRd_HJpaTpvOfVIxUlrpFyI4Jd&_nc_zt=23&_nc_ht=scontent.fsgn5-15.fna&_nc_gid=RQQ6_B0JqGIsywZjJyKINQ&_nc_ss=7a3a8&oh=00_Af0CaDTdaAVUpBSqUyRfwdsLUtpULRm-0qhukKi5NSWU3w&oe=69DCD188',
-    colors: ['#ffb6c1', '#ffffff', '#1d1d1f'],
-    categoryPath: '/ao-thun' // Đã thêm nhãn danh mục
+  { 
+    id: 4, name: 'Polo', tagline: 'Đủ tính năng. Vừa túi tiền.', 
+    image: 'https://www.rlmedia.io/is/image/PoloGSI/s7-1412366_alternate10?$rl_pdp_mob_zoom$', 
+    colors: ['#ffb6c1', '#ffffff', '#1d1d1f'], categoryPath: '/ao-thun'
   },
 ];
 
@@ -44,71 +43,74 @@ export default function HomeList() {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  // Chạy hiệu ứng khi trang web vừa load lên
+  useEffect(() => {
+    AOS.init({
+      duration: 800, 
+      easing: 'ease-out-cubic', 
+      once: true, 
+      offset: 50, 
+    });
+  }, []);
+
   const filteredProducts = StyleProducts.filter(product => {
     if (currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
-      return true;
+      return true; 
     }
     return product.categoryPath === currentPath;
   });
 
   return (
-    <div className="layout-wrapper">
-      {/* Cột Menu bên trái */}
-      <Sidebar />
+    <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}> 
+      
+      <HomeTopbar />
 
-      <div className="main-content">
-        {/* Thanh điều hướng phía trên */}
-        <Topbar />
+      <div className="apple-style-container">
+        {(currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') && (
+            <AdsBanner images={bannerImages} />
+        )}
 
-        {/* Khu vực hiển thị sản phẩm chính */}
-        <div className="apple-style-container">
-
-          <div className="apple-header">
-            <h1>Khám phá dòng sản phẩm.</h1>
-            {/* <a href="#compare">So sánh tất cả các phiên bản &gt;</a> */}
-          </div>
-
-          {/* Kiểm tra xem danh mục có sản phẩm nào không */}
-          {filteredProducts.length > 0 ? (
-            <div className="product-carousel">
-              {/* Đã sửa thành filteredProducts.map để hiển thị đúng sản phẩm đã lọc */}
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="product-card">
-                  <Link to={`/san-pham/${product.id}`} key={product.id} className="product-card" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    {/* Khung hình ảnh bo góc lớn */}
-                    <div className="image-box">
-                      <img src={product.image} alt={product.name} />
-                    </div>
-                  </Link>
-                  {/* Các chấm màu (Color variants) */}
-                  <div className="color-variants">
-                    {product.colors.map((color, index) => (
-                      <div
-                        key={index}
-                        className="dot"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-
-
-                  <div className="product-info">
-                    <h3 className="product-name">{product.name}</h3>
-                    <p className="product-tagline">{product.tagline}</p>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          ) : (
-            // Thông báo hiển thị khi bấm vào danh mục chưa có sản phẩm (ví dụ: Váy & đầm)
-            <div style={{ textAlign: 'center', padding: '50px', color: '#86868b' }}>
-              <h2>Chưa có sản phẩm nào trong danh mục này.</h2>
-              <p>Vui lòng quay lại sau nhé!</p>
-            </div>
-          )}
-
+        <div className="apple-header" data-aos="fade-up">
+          <h1 style={{ fontSize: '48px', fontWeight: '600', letterSpacing: '-1px' }}>
+            Khám phá dòng sản phẩm.
+          </h1>
         </div>
+
+        {filteredProducts.length > 0 ? (
+          <div className="product-carousel">
+            
+            {filteredProducts.map((product, index) => (
+              
+              <Link 
+                to={`/san-pham/${product.id}`} 
+                key={product.id} 
+                className="product-card" 
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                data-aos="fade-up" 
+                data-aos-delay={index * 100} 
+              >
+                <div className="image-box">
+                  <img src={product.image} alt={product.name} style={{ width: '100%', borderRadius: '20px' }} />
+                </div>
+                <div className="color-variants">
+                  {product.colors.map((color, idx) => (
+                    <div key={idx} className="dot" style={{ backgroundColor: color }} />
+                  ))}
+                </div>
+                <div className="product-info">
+                  <h3 className="product-name">{product.name}</h3>
+                  <p className="product-tagline">{product.tagline}</p>
+                </div>
+              </Link>
+
+            ))}
+          </div>
+        ) : (
+          <div data-aos="fade-up" style={{ textAlign: 'center', padding: '100px 0', color: '#86868b' }}>
+            <h2>Chưa có sản phẩm nào trong danh mục này.</h2>
+          </div>
+        )}
+
       </div>
     </div>
   );
