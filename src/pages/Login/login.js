@@ -6,15 +6,32 @@ function Login() {
 	const [password, setPassword] = useState('');
 	const [message, setMessage] = useState('');
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault();
 
 		if (!email.trim() || !password.trim()) {
 			setMessage('Vui lòng nhập đầy đủ email và mật khẩu.');
 			return;
 		}
-
-		setMessage('Đăng nhập thành công.');
+		try {
+			const response = await fetch(
+				'https://clothes-api.fernirx.io.vn/api/clothes/auth/login',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						email: email,
+						password: password,
+					}),
+				}
+			);
+			console.log(response.data);
+			setMessage('Đăng nhập thành công.');
+		} catch (error) {
+			console.error('Error:', error);
+		}
 	};
 
 	return (
@@ -32,7 +49,7 @@ function Login() {
 						<p>Quản trị đơn hàng</p>
 					</div>
 					<div className="decor-content">
-						
+
 						<h1>Quản lý cửa hàng gọn gàng, nhanh và trực quan.</h1>
 						<p className="decor-text">
 							Theo dõi đơn hàng, tồn kho và khách hàng trên một không gian hiện đại.
@@ -47,7 +64,7 @@ function Login() {
 
 				<div className="login-card">
 					<div className="login-header">
-					
+
 						<h2>Đăng nhập</h2>
 						<p className="login-description">
 							Nhập thông tin tài khoản để tiếp tục vào trang quản trị.
