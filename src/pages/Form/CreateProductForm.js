@@ -317,99 +317,156 @@ export default function CreateProductForm() {
 
   const handleSubmit = async () => {
     let apiGender = "UNISEX";
-    if (gender === "MEN") apiGender = "MEN";
-    if (gender === "WOMEN") apiGender = "WOMEN";
+    if (gender === "MEN") apiGender = "MALE";
+    if (gender === "WOMEN") apiGender = "FEMALE";
     if (gender === "KIDS") apiGender = "KIDS";
 
     const generateSlug = (str) => {
-      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+      return (str || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
     };
 
-    // Payload của Product
+    const extractProductId = (response) => {
+      return (
+        response?.data?.id ||
+        response?.id ||
+        response?.data?.data?.id ||
+        response?.result?.id ||
+        null
+      );
+    };
+
     const productPayload = {
-      brandId: parseInt(form.brand, 10) || 0,
-      code: form.code,
+      brandId: Number(form.brand) || 0,
+      code: form.code.trim(),
       slug: generateSlug(form.name),
-      name: form.name,
-      description: form.desc,
+      name: form.name.trim(),
+      description: form.desc.trim(),
       gender: apiGender,
-      material: form.material,
-      originCountry: form.origin,
+      material: form.material.trim(),
+      originCountry: form.origin.trim(),
       basePrice: Number(form.basePrice) || 0,
       originalPrice: Number(form.originalPrice) || 0,
       costPrice: Number(form.costPrice) || 0,
       isNew: true,
       isOnSale: false,
       isActive: true,
-      categoryId: [Number(form.category)],
+      categoryId: Number(form.category) || 0,
     };
-    console.log("Payload sản phẩm sẽ gửi lên API:", productPayload);
-    try {
 
+    const variantPayloads = [];
+
+    variants.forEach((v) => {
+      v.sizes.forEach((s) => {
+        if (!v.color?.trim()) return;
+        if (!s.size?.trim()) return;
+        if (!s.sku?.trim()) return;
+
+        variantPayloads.push({
+          variantId: s.id || null,
+          payload: {
+            color: v.color.trim(),
+            colorHex: v.colorHex,
+            size: s.size.trim(),
+            sku: s.sku.trim(),
+            stockQuantity: Number(s.stock) || 0,
+            price: Number(form.basePrice) || 0,
+            minStockLevel: 0,
+          },
+        });
+      });
+    });
+
+    if (variantPayloads.length === 0) {
+      setShowVariantError(true);
+      alert("Vui lòng nhập ít nhất 1 biến thể hợp lệ.");
+      return;
+    }
+
+    setShowVariantError(false);
+
+    try {
       const productUrl = isEditMode
         ? `https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${id}`
         : "https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products";
 
+      const productMethod = isEditMode ? "PUT" : "POST";
+
       const productRes = await fetch(productUrl, {
-        method: isEditMode ? "PUT" : "POST",
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        method: productMethod,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(productPayload),
       });
 
-      if (!productRes.ok) throw new Error("Lỗi HTTP: " + productRes.status);
+      const productText = await productRes.text();
+      let productJson = null;
 
-      const savedProductData = await productRes.json();
-
-      const currentProductId = isEditMode ? id : (savedProductData.id || savedProductData.data?.id);
-
-      if (!currentProductId) {
-        throw new Error("Lưu sản phẩm thành công nhưng không lấy được ID trả về");
+      try {
+        productJson = productText ? JSON.parse(productText) : null;
+      } catch (e) {
+        console.error("Product response không phải JSON:", productText);
       }
 
-      // BƯỚC 2: LƯU BIẾN THỂ
-      const variantPromises = [];
+      if (!productRes.ok) {
+        throw new Error(`Lưu product thất bại. HTTP ${productRes.status}`);
+      }
 
-      variants.forEach((v) => {
-        v.sizes.forEach((s) => {
-          if (!s.size.trim() || !s.sku.trim()) return;
+      const currentProductId = isEditMode
+        ? Number(id)
+        : extractProductId(productJson);
 
+      if (!currentProductId) {
+        console.error("Không lấy được productId từ response:", productJson);
+        throw new Error("Tạo product thành công nhưng không lấy được productId");
+      }
 
-          const variantPayload = {
-            productId: Number(currentProductId),
-            color: v.color,
-            colorHex: v.colorHex,
-            size: s.size,
-            sku: s.sku,
-            stockQuantity: Number(s.stock) || 0, // Dùng stockQuantity
-            price: Number(form.basePrice) || 0,  // Thêm price
-            minStockLevel: 0,                    // Thêm minStockLevel
-          };
+      for (const item of variantPayloads) {
+        const variantBody = {
+          productId: Number(currentProductId),
+          ...item.payload,
+        };
 
-          if (isEditMode && s.id) {
-            variantPromises.push(
-              fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants/${s.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(variantPayload),
-              })
-            );
-          } else {
-            variantPromises.push(
-              fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(variantPayload),
-              })
-            );
-          }
+        const variantUrl =
+          isEditMode && item.variantId
+            ? `https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants/${item.variantId}`
+            : "https://clothes-api.fernirx.io.vn/api/clothes/api/v1/variants";
+
+        const variantMethod =
+          isEditMode && item.variantId ? "PUT" : "POST";
+        console.log("=== VARIANT REQUEST ===", {
+          url: variantUrl,
+          method: variantMethod,
+          body: variantBody,
         });
-      });
 
-      if (variantPromises.length > 0) {
-        const variantResponses = await Promise.all(variantPromises);
-        const failedVariant = variantResponses.find(res => !res.ok);
-        if (failedVariant) {
-          console.error("Một số biến thể bị lỗi khi lưu:", failedVariant.status);
+        const variantRes = await fetch(variantUrl, {
+          method: variantMethod,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(variantBody),
+        });
+
+        const variantText = await variantRes.text();
+        let variantJson = null;
+
+        try {
+          variantJson = variantText ? JSON.parse(variantText) : null;
+        } catch (e) {
+          console.error("Variant response không phải JSON:", variantText);
+        }
+
+
+        if (!variantRes.ok) {
+          throw new Error(`Lưu variant thất bại. HTTP ${variantRes.status}`);
         }
       }
 
@@ -418,10 +475,11 @@ export default function CreateProductForm() {
         setShowToast(false);
         navigate("/products");
       }, 2000);
-
     } catch (error) {
       console.error("Lỗi khi lưu sản phẩm:", error);
-      alert(`${isEditMode ? "Cập nhật" : "Tạo"} sản phẩm thất bại. Vui lòng bật F12 xem Console!`);
+      alert(
+        `${isEditMode ? "Cập nhật" : "Tạo"} sản phẩm thất bại. Mở F12 để xem log chi tiết.`
+      );
     }
   };
   console.log("data form", form);
@@ -491,7 +549,7 @@ export default function CreateProductForm() {
                 value={form.category}
                 onChange={(e) => updateForm("category", e.target.value)}
               >
-                <option value="">— Chọn danh mục —</option>
+                <option value={form.category}>— Chọn danh mục —</option>
                 <option value="1">test</option>
                 <option value="2">Áo</option>
                 <option value="3">Quần</option>
