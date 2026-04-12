@@ -10,6 +10,7 @@ import ProductList from './pages/products/ProductList';
 import Reviews from './pages/reviews/Reviews';
 import Users from './pages/users/Users';
 import Suppliers from './pages/suppliers/Suppliers';
+import Brands from './pages/brands/Brands';
 import Notifications from './pages/notifications/Notifications';
 import Inventory from './pages/inventory/Inventory';
 import CreateProductForm from './pages/Form/CreateProductForm';
@@ -28,6 +29,7 @@ function AdminLayout() {
     "/reviews": { title: "Đánh giá & Bình luận", button: "Xuất báo cáo" },
     "/users": { title: "Quản lý người dùng", button: "+ Thêm admin" },
     "/suppliers": { title: "Nhà cung cấp" },
+    "/brands": { title: "Thương hiệu" },
     "/notifications": { title: "Thông báo", button: "+ Tạo thông báo" },
     "/inventory": { title: "Tồn kho", button: "+ Tạo phiếu nhập" },
   };
@@ -62,6 +64,7 @@ function AdminLayout() {
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/users" element={<Users />} />
             <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/brands" element={<Brands />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/inventory" element={<Inventory />} />
           </Routes>
