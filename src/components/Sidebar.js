@@ -46,6 +46,10 @@ export default function Sidebar() {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1 12V5l5-4 5 4v7H1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M5 12V9h4v3" stroke="currentColor" strokeWidth="1.3"/><path d="M11 7h4v5h-4" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>
           Nhà cung cấp
         </NavLink>
+        <NavLink to="/brands" className={({ isActive }) => isActive ? "sb-item on" : "sb-item"}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 2h10v4l-5 8-5-8V2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><circle cx="8" cy="5" r="1.2" fill="currentColor"/></svg>
+          Thương hiệu
+        </NavLink>
 
         <div className="sb-sec">Hệ thống</div>
         <NavLink to="/users" className={({ isActive }) => isActive ? "sb-item on" : "sb-item"}>
