@@ -168,8 +168,6 @@ export default function Users() {
         }));
     };
 
-   // Thay thế hàm handleSubmit hiện tại của bạn bằng đoạn này:
-
 const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -210,8 +208,6 @@ const handleSubmit = async (e) => {
         setIsSaving(false);
     }
 };
-
-    // Hàm chuyển đổi màn hình
     const toggleTrashView = () => {
         setIsViewTrash(!isViewTrash);
         setShowForm(false); // Đóng form nếu đang mở

@@ -29,7 +29,7 @@ function AdminLayout() {
     "/products": { title: "Quản lý sản phẩm", button: "+ Thêm sản phẩm" },
     "/coupons": { title: "Khuyến mãi / Coupon", button: "+ Tạo coupon" },
     "/reviews": { title: "Đánh giá & Bình luận", button: "Xuất báo cáo" },
-    "/users": { title: "Quản lý người dùng", button: "+ Thêm admin" },
+    "/users": { title: "Quản lý người dùng" },
     "/suppliers": { title: "Nhà cung cấp" },
     "/brands": { title: "Thương hiệu" },
     "/notifications": { title: "Thông báo", button: "+ Tạo thông báo" },

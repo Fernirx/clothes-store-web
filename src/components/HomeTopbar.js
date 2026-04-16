@@ -4,8 +4,18 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 export default function HomeTopbar() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // State cho User Auth (Code hiện tại của bạn)
   const [user, setUser] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
+
+  // State cho Mini Cart (Code tải từ mạng về)
+  const [isHoverCart, setIsHoverCart] = useState(false);
+  const cartItems = [
+    { id: 1, name: 'Áo thun Polo Blue', price: '250.000đ', quantity: 1, img: 'https://via.placeholder.com/40' },
+    { id: 2, name: 'Quần Jean Slimfit', price: '450.000đ', quantity: 1, img: 'https://via.placeholder.com/40' },
+  ];
+  const totalQuantity = cartItems.length;
 
   // Lấy thông tin user từ localStorage khi component mount
   useEffect(() => {
@@ -50,9 +60,8 @@ export default function HomeTopbar() {
     navigate('/danh-sach-quan-ao');
   };
 
-  // Đưa các danh mục từ Sidebar cũ lên đây
   const categories = [
-    { name: 'Hàng mới về', path: '/new-arrivals' },
+    { name: 'Hàng mới về', path: '/' },
     { name: 'Áo Thun', path: '/ao-thun' },
     { name: 'Quần Jean', path: '/quan-jean' },
     { name: 'Áo Khoác', path: '/ao-khoac' },
@@ -83,10 +92,10 @@ export default function HomeTopbar() {
         </Link>
       </h2>
 
-      {/* 2. MENU DANH MỤC Ở GIỮA */}
+      {/* 2. MENU CÁC DANH MỤC */}
       <div style={{ display: 'flex', gap: '32px' }}>
         {categories.map((item, index) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || (location.pathname === '/' && item.path === '/');
           return (
             <Link
               key={index}
@@ -110,8 +119,30 @@ export default function HomeTopbar() {
 
       {/* 3. GIỎ HÀNG & USER / LOGIN */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        
         {/* Giỏ hàng */}
-        <div style={{ cursor: 'pointer', fontSize: '18px' }} >🛒</div>
+        <div 
+          style={{ cursor: 'pointer', fontSize: '18px', position: 'relative' }}
+          onMouseEnter={() => setIsHoverCart(true)}
+          onMouseLeave={() => setIsHoverCart(false)}
+        >
+          🛒
+          {totalQuantity > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-6px',
+              right: '-8px',
+              backgroundColor: '#ff3b30',
+              color: 'white',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              borderRadius: '50%',
+              padding: '2px 6px'
+            }}>
+              {totalQuantity}
+            </span>
+          )}
+        </div>
 
         {/* Hiển thị User hoặc Login Button */}
         {user ? (
@@ -215,6 +246,7 @@ export default function HomeTopbar() {
             Đăng nhập
           </button>
         )}
+
       </div>
     </div>
   );
