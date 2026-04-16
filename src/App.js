@@ -15,7 +15,9 @@ import Inventory from './pages/inventory/Inventory';
 import CreateProductForm from './pages/Form/CreateProductForm';
 import HomeList from './pages/home/HomeList';
 import ProductDetail from './pages/ProductDetail/ProductDetail';
-import Login from './pages/Login/login';
+import Login from './pages/auth/login';
+import Register from './pages/auth/Register';
+import VerifyOTP from './pages/auth/VerifyOTP';
 function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -77,6 +79,9 @@ function App() {
       <Routes>
         {/* 1. CÁC TRANG FORM ĐỘC LẬP (Không có sidebar/topbar) */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/signup" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOTP />} />
         <Route path="/products/form/" element={<CreateProductForm />} />
         <Route path="/products/form/:id" element={<CreateProductForm />} />
 
@@ -84,10 +89,10 @@ function App() {
         <Route path="/" element={<HomeList />} />
         <Route path="/home" element={<HomeList />} />
         <Route path="/new-arrivals" element={<HomeList />} />
-        
+
         {/* 👉 ĐÂY LÀ DÒNG BỊ THIẾU MÀ MÌNH ĐÃ THÊM VÀO GIÚP BẠN */}
-        <Route path="/danh-sach-quan-ao" element={<HomeList />} /> 
-        
+        <Route path="/danh-sach-quan-ao" element={<HomeList />} />
+
         <Route path="/ao-thun" element={<HomeList />} />
         <Route path="/quan-jean" element={<HomeList />} />
         <Route path="/ao-khoac" element={<HomeList />} />
