@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 export default function Topbar({ title = "Dashboard", buttonText = "+ Thêm mới", onButtonClick }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
