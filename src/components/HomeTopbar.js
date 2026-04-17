@@ -61,11 +61,10 @@ export default function HomeTopbar() {
   };
 
   const categories = [
-    { name: 'Hàng mới về', path: '/' },
-    { name: 'Áo Thun', path: '/ao-thun' },
-    { name: 'Quần Jean', path: '/quan-jean' },
-    { name: 'Áo Khoác', path: '/ao-khoac' },
-    { name: 'Váy & Đầm', path: '/vay-dam' },
+    { name: 'Áo Nam', path: '/ao-thun' },
+    { name: 'Áo Nữ', path: '/quan-jean' },
+    { name: 'Áo trẻ em', path: '/ao-khoac' },
+    { name: 'Áo Unisex', path: '/vay-dam' },
   ];
 
   return (
