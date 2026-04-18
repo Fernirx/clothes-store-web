@@ -1,87 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./EditProductForm.css";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ProductVariantForm from "./ProductVariantForm";
 
-const INITIAL_VARIANTS = [
-    {
-        id: 1,
-        color: "Đỏ",
-        hex: "#E53935",
-        size: "M",
-        sku: "SP001-RED-M",
-        stock: 12,
-        price: null,
-        active: true,
-    },
-    {
-        id: 2,
-        color: "Đỏ",
-        hex: "#E53935",
-        size: "L",
-        sku: "SP001-RED-L",
-        stock: 3,
-        price: null,
-        active: true,
-    },
-    {
-        id: 3,
-        color: "Xanh navy",
-        hex: "#1565C0",
-        size: "M",
-        sku: "SP001-NAVY-M",
-        stock: 20,
-        price: null,
-        active: true,
-    },
-    {
-        id: 4,
-        color: "Xanh navy",
-        hex: "#1565C0",
-        size: "L",
-        sku: "SP001-NAVY-L",
-        stock: 0,
-        price: 329000,
-        active: false,
-    },
-];
-
 const INITIAL_COLOR_IMAGES = {
-    Đỏ: {
-        hex: "#E53935",
-        images: [
-            {
-                id: 1,
-                src: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=200&q=80",
-                primary: true,
-            },
-            {
-                id: 2,
-                src: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=200&q=80",
-                primary: false,
-            },
-        ],
-    },
-    "Xanh navy": {
-        hex: "#1565C0",
-        images: [
-            {
-                id: 3,
-                src: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=200&q=80",
-                primary: true,
-            },
-            {
-                id: 4,
-                src: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=200&q=80",
-                primary: false,
-            },
-            {
-                id: 5,
-                src: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=200&q=80",
-                primary: false,
-            },
-        ],
-    },
 };
 
 const INITIAL_CATEGORIES = [
@@ -99,83 +21,70 @@ const TAB_KEYS = {
     CATEGORIES: "categories",
 };
 
-function EditProductForm() {
-    const { idProduct } = useParams(); // lấy id từ url
+const GENDER_MAP = {
+    MALE: "MEN",
+    FEMALE: "WOMEN",
+    UNISEX: "UNISEX",
+    KIDS: "KIDS",
+    Nam: "MEN",
+    Nữ: "WOMEN",
+    MEN: "MEN",
+    WOMEN: "WOMEN",
+};
 
-    // State lưu tab hiện tại
+const normalizeGender = (value) => {
+    return GENDER_MAP[value] || "UNISEX";
+};
+
+function EditProductForm() {
+    const { idProduct } = useParams();
+    const navigate = useNavigate();
+
     const [activeTab, setActiveTab] = useState(TAB_KEYS.BASIC);
 
-    // State lưu tên sản phẩm
     const [name, setName] = useState("Áo thun nam basic oversize");
-
-    // State lưu mã sản phẩm
     const [productCode, setProductCode] = useState("SP001");
-
-    // State lưu mô tả sản phẩm
     const [description, setDescription] = useState(
         "Áo thun nam form oversize basic, chất liệu 100% cotton thoáng mát, phù hợp mặc hàng ngày."
     );
-
-    // State lưu giá bán
     const [basePrice, setBasePrice] = useState("299000");
-
-    // State lưu giá gốc
     const [originalPrice, setOriginalPrice] = useState("399000");
-
-    // State lưu giá vốn
     const [costPrice, setCostPrice] = useState("150000");
-
-    // State lưu thương hiệu
-    const [brand, setBrand] = useState("");
-
-    // State lưu giới tính
     const [gender, setGender] = useState("UNISEX");
-
-    // State lưu chất liệu
     const [material, setMaterial] = useState("100% Cotton");
-
-    // State lưu xuất xứ
     const [origin, setOrigin] = useState("Việt Nam");
-
-    // State lưu trạng thái hiển thị web
+    const [brand, setBrand] = useState("");
     const [isActive, setIsActive] = useState(true);
-
-    // State lưu badge NEW
     const [isNew, setIsNew] = useState(true);
-
-    // State lưu badge SALE
     const [isSale, setIsSale] = useState(false);
+    const [soldCount, setSoldCount] = useState(0);
+    const [viewCount, setViewCount] = useState(0);
+    const [uploadingColor, setUploadingColor] = useState("");
 
-    // State lưu danh sách variants
-    const [variants, setVariants] = useState(INITIAL_VARIANTS);
-
-    // State lưu ảnh theo từng màu
+    const [variants, setVariants] = useState([]);
     const [colorImages, setColorImages] = useState(INITIAL_COLOR_IMAGES);
-
-    // State lưu danh mục
     const [categories, setCategories] = useState(INITIAL_CATEGORIES);
 
-    // State lưu việc mở / đóng modal variant
     const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
-
-    // State lưu id variant đang sửa, null là đang thêm mới
     const [editingVariantId, setEditingVariantId] = useState(null);
+    const [isSavingVariant, setIsSavingVariant] = useState(false);
 
-    // State lưu dữ liệu form trong modal variant
     const [variantForm, setVariantForm] = useState({
         color: "",
         hex: "#888888",
         size: "",
         sku: "",
         stock: "0",
+        minStockLevel: "5",
+        displayOrder: "0",
         price: "",
     });
 
-    // State lưu ảnh tạm trong modal khi thêm màu mới
     const [modalImages, setModalImages] = useState([]);
-
-    // State lưu toast
     const [toastMessage, setToastMessage] = useState("");
+
+    const [loadingProduct, setLoadingProduct] = useState(false);
+    const [productError, setProductError] = useState("");
 
     const variantCount = variants.length;
 
@@ -187,11 +96,11 @@ function EditProductForm() {
 
     const stats = useMemo(() => {
         return {
-            sold: 128,
-            views: 2341,
+            sold: soldCount,
+            views: viewCount,
             stock: variants.reduce((sum, item) => sum + (Number(item.stock) || 0), 0),
         };
-    }, [variants]);
+    }, [variants, soldCount, viewCount]);
 
     const availableColors = useMemo(() => {
         return [...new Set(variants.map((item) => item.color))];
@@ -216,15 +125,13 @@ function EditProductForm() {
         setToastMessage(`✓ ${message}`);
     };
 
-    const handleSaveBasicInfo = () => {
+    const handleSaveBasicInfo = async () => {
         const payload = {
             name,
-            productCode,
             description,
             basePrice: Number(basePrice),
             originalPrice: originalPrice ? Number(originalPrice) : null,
             costPrice: costPrice ? Number(costPrice) : null,
-            brand,
             gender,
             material,
             origin,
@@ -233,26 +140,249 @@ function EditProductForm() {
             isSale,
         };
 
-        console.log("Basic info payload:", payload);
-        showToast("Đã lưu thay đổi");
+        try {
+            const response = await fetch(
+                `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Lỗi HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Cập nhật sản phẩm thành công:", result);
+            showToast("Đã lưu thay đổi");
+        } catch (error) {
+            console.error("Lỗi khi cập nhật sản phẩm:", error);
+            alert("Không thể lưu thay đổi. Vui lòng thử lại!");
+        }
     };
 
-    const toggleVariantActive = (id) => {
-        setVariants((prev) =>
-            prev.map((item) =>
-                item.id === id ? { ...item, active: !item.active } : item
-            )
-        );
+    const toggleVariantActive = async (id) => {
+        const currentVariant = variants.find((item) => item.id === id);
+        if (!currentVariant || !idProduct) return;
+
+        const nextIsActive = !currentVariant.active;
+
+        try {
+            const payload = {
+                price: Number(currentVariant.price) || 0,
+                stockQuantity: Number(currentVariant.stock) || 0,
+                minStockLevel: Number(currentVariant.minStockLevel) || 5,
+                displayOrder: Number(currentVariant.displayOrder) || 0,
+                isActive: nextIsActive,
+            };
+
+            const response = await fetch(
+                `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants/${id}`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(payload),
+                }
+            );
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(
+                    result?.message || "Cập nhật trạng thái variant thất bại"
+                );
+            }
+
+            const updatedVariant = result?.data || result;
+
+            setVariants((prev) =>
+                prev.map((item) =>
+                    item.id === id
+                        ? {
+                            ...item,
+                            active:
+                                updatedVariant.isActive !== undefined
+                                    ? updatedVariant.isActive
+                                    : nextIsActive,
+                            price:
+                                updatedVariant.price !== undefined
+                                    ? updatedVariant.price
+                                    : item.price,
+                            stock:
+                                updatedVariant.stockQuantity !== undefined
+                                    ? updatedVariant.stockQuantity
+                                    : item.stock,
+                            minStockLevel:
+                                updatedVariant.minStockLevel !== undefined
+                                    ? updatedVariant.minStockLevel
+                                    : item.minStockLevel,
+                            displayOrder:
+                                updatedVariant.displayOrder !== undefined
+                                    ? updatedVariant.displayOrder
+                                    : item.displayOrder,
+                        }
+                        : item
+                )
+            );
+
+            showToast(nextIsActive ? "Đã bật variant" : "Đã tắt variant");
+        } catch (error) {
+            console.error("Lỗi khi đổi trạng thái variant:", error);
+            alert(error.message || "Có lỗi xảy ra khi cập nhật trạng thái variant");
+        }
     };
 
-    const deleteVariant = (id) => {
+    const deleteVariant = async (id) => {
         const confirmed = window.confirm("Xóa variant này?");
         if (!confirmed) return;
 
-        setVariants((prev) => prev.filter((item) => item.id !== id));
-        showToast("Đã xóa variant");
-    };
+        try {
+            const response = await fetch(
+                `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants/${id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                }
+            );
 
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(result?.message || "Xóa variant thất bại");
+            }
+
+            setVariants((prev) => prev.filter((item) => item.id !== id));
+            showToast("Đã xóa variant");
+        } catch (error) {
+            console.error("Lỗi khi xóa variant:", error);
+            alert(error.message || "Có lỗi xảy ra khi xóa variant");
+        }
+    };
+    const uploadMediaImage = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(
+            "https://clothes-api.fernirx.io.vn/api/clothes/media/image?context=PRODUCT",
+            {
+                method: "POST",
+                body: formData,
+                credentials: "include",
+            }
+        );
+
+        const result = await response.json().catch(() => null);
+        console.log(result.data);
+
+        if (!response.ok) {
+            throw new Error(result?.message || "Upload ảnh thất bại");
+        }
+
+        return result?.data || result;
+    };
+    const createProductVariantImage = async ({
+        productId,
+        color,
+        colorHex,
+        imageUrl,
+        imagePublicId,
+        isPrimary,
+    }) => {
+        const response = await fetch(
+            `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${productId}/images`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    color,
+                    colorHex,
+                    imageUrl,
+                    imagePublicId,
+                    isPrimary,
+                }),
+            }
+        );
+
+        const result = await response.json().catch(() => null);
+
+        if (!response.ok) {
+            throw new Error(result?.message || "Tạo ảnh biến thể thất bại");
+        }
+
+        return result?.data || result;
+    };
+    const normalizeColorImages = (images = []) => {
+        const nextImages = images.map((img, index) => ({
+            id: img.id || `${Date.now()}-${index}`,
+            file: img.file,
+            src: img.src || "",
+            publicId: img.publicId,
+            primary: Boolean(img.primary),
+        }));
+
+        // luôn đảm bảo chỉ có đúng 1 ảnh chính
+        const primaryIndex = nextImages.findIndex((img) => img.primary);
+
+        if (nextImages.length > 0) {
+            if (primaryIndex === -1) {
+                nextImages[0].primary = true;
+            } else {
+                nextImages.forEach((img, index) => {
+                    img.primary = index === primaryIndex;
+                });
+            }
+        }
+
+        return nextImages;
+    };
+    const mapImagesByColorFromProduct = (imagesByColor = []) => {
+        const nextColorImages = {};
+
+        imagesByColor.forEach((group) => {
+            if (!group?.color) return;
+
+            const mappedImages = Array.isArray(group.images)
+                ? group.images.map((img, index) => ({
+                    id: img.id || `${group.color}-${index}`,
+                    src: img.imageUrl || "",
+                    publicId: img.publicId || "",
+                    primary: Boolean(img.isPrimary),
+                }))
+                : [];
+
+            // luôn đảm bảo có đúng 1 ảnh chính nếu có ảnh
+            const primaryIndex = mappedImages.findIndex((img) => img.primary);
+            if (mappedImages.length > 0) {
+                if (primaryIndex === -1) {
+                    mappedImages[0].primary = true;
+                } else {
+                    mappedImages.forEach((img, index) => {
+                        img.primary = index === primaryIndex;
+                    });
+                }
+            }
+
+            nextColorImages[group.color] = {
+                hex: group.colorHex || "#888888",
+                images: mappedImages,
+            };
+        });
+
+        return nextColorImages;
+    };
     const openAddVariant = () => {
         setEditingVariantId(null);
         setVariantForm({
@@ -261,27 +391,227 @@ function EditProductForm() {
             size: "",
             sku: "",
             stock: "0",
+            minStockLevel: "5",
+            displayOrder: String(variants.length),
             price: "",
         });
         setModalImages([]);
         setIsVariantModalOpen(true);
     };
 
-    const openEditVariant = (id) => {
+    const editVariant = (id) => {
         const variant = variants.find((item) => item.id === id);
         if (!variant) return;
 
         setEditingVariantId(id);
         setVariantForm({
-            color: variant.color,
-            hex: variant.hex || "#888888",
-            size: variant.size,
-            sku: variant.sku,
+            color: variant.color || "",
+            hex: variant.colorHex || variant.hex || "#888888",
+            size: variant.size || "",
+            sku: variant.sku || "",
             stock: String(variant.stock ?? 0),
-            price: variant.price ? String(variant.price) : "",
+            minStockLevel: String(variant.minStockLevel ?? 5),
+            displayOrder: String(variant.displayOrder ?? 0),
+            price:
+                variant.price !== null && variant.price !== undefined
+                    ? String(variant.price)
+                    : "",
         });
+
         setModalImages([]);
         setIsVariantModalOpen(true);
+    };
+
+    const saveVariant = async () => {
+        const color = variantForm.color.trim();
+        const hex = variantForm.hex.trim() || "#888888";
+        const size = variantForm.size.trim();
+        const sku = variantForm.sku.trim();
+        const stock = Number(variantForm.stock) || 0;
+        const minStockLevel = Number(variantForm.minStockLevel) || 5;
+        const displayOrder = Number(variantForm.displayOrder) || 0;
+        const price = variantForm.price ? Number(variantForm.price) : 0;
+
+        if (!editingVariantId && (!color || !size || !sku)) {
+            alert("Vui lòng điền màu, size và SKU");
+            return;
+        }
+
+        try {
+            setIsSavingVariant(true);
+
+            // UPDATE: chỉ cho sửa price, stockQuantity, minStockLevel, displayOrder
+            if (editingVariantId) {
+                const payload = {
+                    price,
+                    stockQuantity: stock,
+                    minStockLevel,
+                    displayOrder,
+                };
+
+                const response = await fetch(
+                    `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants/${editingVariantId}`,
+                    {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        credentials: "include",
+                        body: JSON.stringify(payload),
+                    }
+                );
+
+                const result = await response.json().catch(() => null);
+
+                if (!response.ok) {
+                    throw new Error(result?.message || "Cập nhật variant thất bại");
+                }
+
+                const updatedVariant = result?.data || result;
+
+                setVariants((prev) =>
+                    prev.map((item) =>
+                        item.id === editingVariantId
+                            ? {
+                                ...item,
+                                price:
+                                    updatedVariant.price !== undefined
+                                        ? updatedVariant.price
+                                        : price,
+                                stock:
+                                    updatedVariant.stockQuantity !== undefined
+                                        ? updatedVariant.stockQuantity
+                                        : stock,
+                                minStockLevel:
+                                    updatedVariant.minStockLevel !== undefined
+                                        ? updatedVariant.minStockLevel
+                                        : minStockLevel,
+                                displayOrder:
+                                    updatedVariant.displayOrder !== undefined
+                                        ? updatedVariant.displayOrder
+                                        : displayOrder,
+                                active:
+                                    updatedVariant.isActive !== undefined
+                                        ? updatedVariant.isActive
+                                        : item.active,
+                            }
+                            : item
+                    )
+                );
+
+                showToast("Đã cập nhật variant");
+                closeVariantModal();
+                return;
+            }
+
+            // =========================
+            // CREATE VARIANT MỚI
+            // 1. Upload media
+            // 2. Gọi API tạo ảnh biến thể
+            // 3. Gọi API tạo variant
+            // =========================
+            let uploadedImages = normalizeColorImages(modalImages);
+
+            if (uploadedImages.length > 0) {
+                const uploadedResults = await Promise.all(
+                    uploadedImages.map(async (img) => {
+                        if (img.file) {
+                            const uploaded = await uploadMediaImage(img.file);
+
+                            return {
+                                ...img,
+                                src: uploaded.imageUrl,
+                                publicId: uploaded.publicId,
+                            };
+                        }
+
+                        return img;
+                    })
+                );
+
+                uploadedImages = normalizeColorImages(uploadedResults);
+
+                // Sau khi media trả về url thì gọi tiếp API tạo ảnh biến thể
+                await Promise.all(
+                    uploadedImages.map((img) =>
+                        createProductVariantImage({
+                            productId: idProduct,
+                            color,
+                            colorHex: hex,
+                            imageUrl: img.src,
+                            imagePublicId: img.publicId,
+                            isPrimary: Boolean(img.primary),
+                        })
+                    )
+                );
+            }
+
+            // Sau đó mới tạo variant
+            const payload = {
+                size,
+                color,
+                colorHex: hex,
+                price,
+                sku,
+                stockQuantity: stock,
+                minStockLevel,
+                displayOrder,
+            };
+
+            const response = await fetch(
+                `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(payload),
+                }
+            );
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(result?.message || "Thêm variant thất bại");
+            }
+
+            const createdVariant = result?.data || result;
+
+            setVariants((prev) => [
+                ...prev,
+                {
+                    id: createdVariant.id,
+                    color: createdVariant.color,
+                    colorHex: createdVariant.colorHex,
+                    hex: createdVariant.colorHex,
+                    size: createdVariant.size,
+                    sku: createdVariant.sku,
+                    stock: createdVariant.stockQuantity ?? 0,
+                    minStockLevel: createdVariant.minStockLevel ?? minStockLevel,
+                    displayOrder: createdVariant.displayOrder ?? displayOrder,
+                    price: createdVariant.price ?? 0,
+                    active: Boolean(createdVariant.isActive !== false),
+                },
+            ]);
+
+            // lưu local để tab Hình ảnh biết ảnh nào là ảnh chính
+            setColorImages((prev) => ({
+                ...prev,
+                [color]: {
+                    hex,
+                    images: uploadedImages,
+                },
+            }));
+
+            showToast("Đã thêm variant");
+            closeVariantModal();
+        } catch (error) {
+            console.error("Lỗi khi lưu variant:", error);
+            alert(error.message || "Có lỗi xảy ra khi lưu variant");
+        } finally {
+            setIsSavingVariant(false);
+        }
     };
 
     const closeVariantModal = () => {
@@ -310,6 +640,7 @@ function EditProductForm() {
                     ...prev,
                     {
                         id: `${Date.now()}-${Math.random()}`,
+                        file,
                         src: event.target?.result || "",
                         primary: prev.length === 0,
                     },
@@ -336,59 +667,6 @@ function EditProductForm() {
             }
             return next;
         });
-    };
-
-    const saveVariant = () => {
-        const color = variantForm.color.trim();
-        const hex = variantForm.hex.trim() || "#888888";
-        const size = variantForm.size.trim();
-        const sku = variantForm.sku.trim();
-        const stock = Number(variantForm.stock) || 0;
-        const price = variantForm.price ? Number(variantForm.price) : null;
-
-        if (!color || !size || !sku) {
-            alert("Vui lòng điền màu, size và SKU");
-            return;
-        }
-
-        if (editingVariantId) {
-            setVariants((prev) =>
-                prev.map((item) =>
-                    item.id === editingVariantId
-                        ? { ...item, color, hex, size, sku, stock, price }
-                        : item
-                )
-            );
-
-            showToast("Đã cập nhật variant");
-        } else {
-            const newVariant = {
-                id: Date.now(),
-                color,
-                hex,
-                size,
-                sku,
-                stock,
-                price,
-                active: true,
-            };
-
-            setVariants((prev) => [...prev, newVariant]);
-
-            if (!colorImages[color]) {
-                setColorImages((prev) => ({
-                    ...prev,
-                    [color]: {
-                        hex,
-                        images: modalImages,
-                    },
-                }));
-            }
-
-            showToast("Đã thêm variant");
-        }
-
-        closeVariantModal();
     };
 
     const setPrimaryImage = (color, index) => {
@@ -422,35 +700,97 @@ function EditProductForm() {
         });
     };
 
-    const addImagesToColor = (color, fileList) => {
+    const addImagesToColor = async (color, fileList) => {
         const files = Array.from(fileList || []);
-        if (!files.length) return;
+        if (!files.length || !idProduct) return;
 
-        files.forEach((file) => {
-            if (!file.type.startsWith("image/")) return;
+        const colorGroup = colorImages[color];
+        if (!colorGroup) {
+            alert("Không tìm thấy thông tin màu để thêm ảnh");
+            return;
+        }
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                setColorImages((prev) => {
-                    const currentImages = prev[color]?.images || [];
+        try {
+            setUploadingColor(color);
+
+            const currentImages = colorGroup.images || [];
+            const hasPrimary = currentImages.some((img) => img.primary);
+
+            const uploadedImages = await Promise.all(
+                files.map(async (file, index) => {
+                    if (!file.type.startsWith("image/")) {
+                        return null;
+                    }
+
+                    // 1. upload media lấy imageUrl + publicId
+                    const uploaded = await uploadMediaImage(file);
+
+                    const isPrimary = !hasPrimary && index === 0;
+
+                    // 2. tạo ảnh biến thể theo màu
+                    const createdImage = await createProductVariantImage({
+                        productId: idProduct,
+                        color,
+                        colorHex: colorGroup.hex || "#888888",
+                        imageUrl: uploaded.imageUrl,
+                        imagePublicId: uploaded.publicId,
+                        isPrimary,
+                    });
+
                     return {
-                        ...prev,
-                        [color]: {
-                            ...prev[color],
-                            images: [
-                                ...currentImages,
-                                {
-                                    id: `${Date.now()}-${Math.random()}`,
-                                    src: event.target?.result || "",
-                                    primary: currentImages.length === 0,
-                                },
-                            ],
-                        },
+                        id:
+                            createdImage?.id ||
+                            `${Date.now()}-${Math.random()}`,
+                        src: createdImage?.imageUrl || uploaded.imageUrl,
+                        publicId:
+                            createdImage?.publicId || uploaded.publicId,
+                        primary: Boolean(
+                            createdImage?.isPrimary !== undefined
+                                ? createdImage.isPrimary
+                                : isPrimary
+                        ),
                     };
-                });
-            };
-            reader.readAsDataURL(file);
-        });
+                })
+            );
+
+            const validUploadedImages = uploadedImages.filter(Boolean);
+
+            if (validUploadedImages.length === 0) return;
+
+            setColorImages((prev) => {
+                const oldImages = prev[color]?.images || [];
+                const mergedImages = [...oldImages, ...validUploadedImages];
+
+                // luôn đảm bảo có đúng 1 ảnh chính
+                let primaryIndex = mergedImages.findIndex((img) => img.primary);
+                if (mergedImages.length > 0) {
+                    if (primaryIndex === -1) {
+                        primaryIndex = 0;
+                    }
+
+                    mergedImages.forEach((img, index) => {
+                        img.primary = index === primaryIndex;
+                    });
+                }
+
+                return {
+                    ...prev,
+                    [color]: {
+                        ...prev[color],
+                        images: mergedImages,
+                    },
+                };
+            });
+
+            showToast(`Đã thêm ${validUploadedImages.length} ảnh cho màu ${color}`);
+            showToast(`Đã thêm ${validUploadedImages.length} ảnh cho màu ${color}`);
+            await getProductDetail(idProduct);
+        } catch (error) {
+            console.error("Lỗi khi thêm ảnh theo màu:", error);
+            alert(error.message || "Có lỗi xảy ra khi thêm ảnh");
+        } finally {
+            setUploadingColor("");
+        }
     };
 
     const toggleCategory = (id) => {
@@ -466,41 +806,10 @@ function EditProductForm() {
         showToast("Đã lưu danh mục");
     };
 
-    // call api branch
-    const [apiBrands, setApiBrands] = useState([]);
-    const apiBranch = async () => {
+    const getProductVariants = async (productId) => {
         try {
-            const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/brands", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Lỗi HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-            setApiBrands(data?.data?.content || []);
-            console.log(data);
-
-            return data;
-        } catch (error) {
-            console.error("Lỗi khi gọi API thương hiệu:", error);
-        }
-    };
-
-    // get product lên
-    const [loadingProduct, setLoadingProduct] = useState(false);
-    const [productError, setProductError] = useState("");
-    const getProductDetail = async (productId) => {
-        try {
-            setLoadingProduct(true);
-            setProductError("");
-
             const response = await fetch(
-                `https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${productId}`,
+                `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${productId}/variants`,
                 {
                     method: "GET",
                     headers: {
@@ -514,27 +823,100 @@ function EditProductForm() {
             }
 
             const result = await response.json();
-            console.log("Chi tiết sản phẩm:", result);
+            console.log("Danh sách variants:", result.data);
 
-            const product = result?.data;
+            if (result.data && Array.isArray(result.data)) {
+                const loadedVariants = result.data.map((v) => ({
+                    id: v.id,
+                    color: v.color || "",
+                    colorHex: v.colorHex || "#888888",
+                    hex: v.colorHex || "#888888",
+                    size: v.size || "",
+                    sku: v.sku || "",
+                    stock: v.stockQuantity ?? 0,
+                    minStockLevel: v.minStockLevel ?? 5,
+                    displayOrder: v.displayOrder ?? 0,
+                    price: v.price ?? 0,
+                    active: Boolean(v.isActive !== false),
+                }));
+                setVariants(loadedVariants);
+            }
+        } catch (error) {
+            console.error("Lỗi khi lấy variants:", error);
+        }
+    };
 
-            if (!product) {
+    let dataProduct = null;
+    const getProductDetail = async (productId) => {
+        try {
+            setLoadingProduct(true);
+            setProductError("");
+
+            const response = await fetch(
+                `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${productId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Lỗi HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Chi tiết sản phẩm:", result.data);
+
+            const dataProduct = result?.data;
+
+            if (!dataProduct) {
                 throw new Error("Không lấy được dữ liệu sản phẩm");
             }
 
-            setName(product.name || "");
-            setProductCode(product.code || "");
-            setDescription(product.description || "");
-            setBasePrice(product.basePrice ? String(product.basePrice) : "");
-            setOriginalPrice(product.originalPrice ? String(product.originalPrice) : "");
-            setCostPrice(product.costPrice ? String(product.costPrice) : "");
-            setBrand(product.brandId ? String(product.brandId) : "");
-            setGender(product.gender || "UNISEX");
-            setMaterial(product.material || "");
-            setOrigin(product.originCountry || "");
-            setIsActive(Boolean(product.isActive));
-            setIsNew(Boolean(product.isNew));
-            setIsSale(Boolean(product.isOnSale));
+            setBrand(dataProduct.brand?.name || "");
+            setName(dataProduct.name || "");
+            setProductCode(dataProduct.code || "");
+            setDescription(dataProduct.description || "");
+            setBasePrice(dataProduct.basePrice ? String(dataProduct.basePrice) : "");
+            setOriginalPrice(
+                dataProduct.originalPrice ? String(dataProduct.originalPrice) : ""
+            );
+            setCostPrice(dataProduct.costPrice ? String(dataProduct.costPrice) : "");
+            setGender(normalizeGender(dataProduct.gender));
+            setMaterial(dataProduct.material || "");
+            setOrigin(dataProduct.originCountry || "");
+            setIsActive(Boolean(dataProduct.isActive));
+            setIsNew(Boolean(dataProduct.isNew));
+            setIsSale(Boolean(dataProduct.isOnSale));
+            setSoldCount(dataProduct.soldCount || 0);
+            setViewCount(dataProduct.viewCount || 0);
+
+            // variants lấy trực tiếp từ response product detail
+            const loadedVariants = Array.isArray(dataProduct.variants)
+                ? dataProduct.variants.map((v) => ({
+                    id: v.id,
+                    color: v.color || "",
+                    colorHex: v.colorHex || "#888888",
+                    hex: v.colorHex || "#888888",
+                    size: v.size || "",
+                    sku: v.sku || "",
+                    stock: v.stockQuantity ?? 0,
+                    minStockLevel: v.minStockLevel ?? 5,
+                    displayOrder: v.displayOrder ?? 0,
+                    price: v.price ?? 0,
+                    active: Boolean(v.isActive !== false),
+                }))
+                : [];
+
+            setVariants(loadedVariants);
+
+            // ảnh theo màu lấy trực tiếp từ imagesByColor của BE
+            const nextColorImages = mapImagesByColorFromProduct(
+                dataProduct.imagesByColor || []
+            );
+            setColorImages(nextColorImages);
         } catch (error) {
             console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
             setProductError(error.message || "Không thể tải thông tin sản phẩm");
@@ -543,17 +925,11 @@ function EditProductForm() {
         }
     };
 
-    // use effect để gọi api
     useEffect(() => {
         if (!idProduct) return;
         getProductDetail(idProduct);
     }, [idProduct]);
 
-    useEffect(() => {
-        apiBranch();
-    }, []);
-
-    // render loading
     if (loadingProduct) {
         return (
             <div className="edit-product-page">
@@ -568,7 +944,6 @@ function EditProductForm() {
         );
     }
 
-    // render error
     if (productError) {
         return (
             <div className="edit-product-page">
@@ -591,7 +966,7 @@ function EditProductForm() {
                     <button
                         type="button"
                         className="edit-product-page__back-btn"
-                        onClick={() => console.log("Back to product list")}
+                        onClick={() => navigate("/products")}
                     >
                         ← Sản phẩm
                     </button>
@@ -604,7 +979,9 @@ function EditProductForm() {
             <div className="edit-product-page__tabs">
                 <button
                     type="button"
-                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.BASIC ? "edit-product-page__tab--active" : ""
+                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.BASIC
+                        ? "edit-product-page__tab--active"
+                        : ""
                         }`}
                     onClick={() => setActiveTab(TAB_KEYS.BASIC)}
                 >
@@ -613,7 +990,9 @@ function EditProductForm() {
 
                 <button
                     type="button"
-                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.VARIANTS ? "edit-product-page__tab--active" : ""
+                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.VARIANTS
+                        ? "edit-product-page__tab--active"
+                        : ""
                         }`}
                     onClick={() => setActiveTab(TAB_KEYS.VARIANTS)}
                 >
@@ -623,7 +1002,9 @@ function EditProductForm() {
 
                 <button
                     type="button"
-                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.IMAGES ? "edit-product-page__tab--active" : ""
+                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.IMAGES
+                        ? "edit-product-page__tab--active"
+                        : ""
                         }`}
                     onClick={() => setActiveTab(TAB_KEYS.IMAGES)}
                 >
@@ -717,27 +1098,21 @@ function EditProductForm() {
                                     <div className="edit-product-page__field">
                                         <label className="edit-product-page__label">Mã sản phẩm</label>
                                         <input
+                                            readOnly
                                             type="text"
                                             className="edit-product-page__input"
                                             value={productCode}
-                                            onChange={(e) => setProductCode(e.target.value)}
                                         />
                                     </div>
 
                                     <div className="edit-product-page__field">
                                         <label className="edit-product-page__label">Thương hiệu</label>
-                                        <select
-                                            className="edit-product-page__select"
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            className="edit-product-page__input"
                                             value={brand}
-                                            onChange={(e) => setBrand(e.target.value)}
-                                        >
-                                            <option value="">Chọn thương hiệu</option>
-                                            {apiBrands.map((brand) => (
-                                                <option key={brand.id} value={brand.id}>
-                                                    {brand.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        />
                                     </div>
                                 </div>
 
@@ -846,12 +1221,6 @@ function EditProductForm() {
                                         {stats.views.toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="edit-product-page__info-row">
-                                    <span className="edit-product-page__key">Tổng tồn kho</span>
-                                    <span className="edit-product-page__val">
-                                        {stats.stock.toLocaleString()}
-                                    </span>
-                                </div>
                             </section>
 
                             <button
@@ -874,7 +1243,7 @@ function EditProductForm() {
                         modalImages={modalImages}
                         isNewColorInModal={isNewColorInModal}
                         openAddVariant={openAddVariant}
-                        openEditVariant={openEditVariant}
+                        editVariant={editVariant}
                         closeVariantModal={closeVariantModal}
                         handleVariantFormChange={handleVariantFormChange}
                         handleModalFiles={handleModalFiles}
@@ -883,6 +1252,7 @@ function EditProductForm() {
                         saveVariant={saveVariant}
                         toggleVariantActive={toggleVariantActive}
                         deleteVariant={deleteVariant}
+                        isSavingVariant={isSavingVariant}
                     />
                 )}
 
@@ -966,14 +1336,18 @@ function EditProductForm() {
                                                         type="file"
                                                         multiple
                                                         accept="image/*"
-                                                        onChange={(e) =>
-                                                            addImagesToColor(color, e.target.files)
-                                                        }
+                                                        disabled={uploadingColor === color}
+                                                        onChange={async (e) => {
+                                                            await addImagesToColor(color, e.target.files);
+                                                            e.target.value = "";
+                                                        }}
                                                     />
                                                     <span className="edit-product-page__img-add-plus">
-                                                        +
+                                                        {uploadingColor === color ? "..." : "+"}
                                                     </span>
-                                                    <span>Thêm ảnh</span>
+                                                    <span>
+                                                        {uploadingColor === color ? "Đang tải..." : "Thêm ảnh"}
+                                                    </span>
                                                 </label>
                                             </div>
                                         </div>
