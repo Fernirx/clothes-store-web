@@ -230,7 +230,11 @@ function AddProductForm() {
                     <button
                         type="button"
                         className="add-product__back-btn"
+<<<<<<< HEAD
                         onClick={() => console.log("Quay lại danh sách sản phẩm")}
+=======
+                        onClick={() => navigate("/products")}
+>>>>>>> main
                     >
                         <svg
                             viewBox="0 0 14 14"

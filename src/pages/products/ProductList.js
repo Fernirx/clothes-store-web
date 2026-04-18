@@ -132,7 +132,11 @@ export default function ProductList() {
                     <td>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         {/* ĐÃ SỬA: Thay item thành p ở dòng dưới đây */}
+<<<<<<< HEAD
                         <button className="btn btn-sm" onClick={() => navigate(`/products/form/${p.id}`, { state: { productData: p } })} >Sửa</button>
+=======
+                        <button className="btn btn-sm" onClick={() => navigate(`/products/form/edit/${p.id}`, { state: { productData: p } })} >Sửa</button>
+>>>>>>> main
 
                         <button
                           className="btn btn-sm"
