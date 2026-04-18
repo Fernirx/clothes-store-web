@@ -13,12 +13,13 @@ import Suppliers from './pages/suppliers/Suppliers';
 import Brands from './pages/brands/Brands';
 import Notifications from './pages/notifications/Notifications';
 import Inventory from './pages/inventory/Inventory';
-import CreateProductForm from './pages/Form/CreateProductForm';
 import HomeList from './pages/home/HomeList';
 import ProductDetail from './pages/ProductDetail/ProductDetail';
 import Login from './pages/auth/login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
+import AddProductForm from './components/form/AddProductForm';
+import EditProductForm from './components/form/EditProductForm';
 function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,8 +86,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/signup" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route path="/products/form/" element={<CreateProductForm />} />
-        <Route path="/products/form/:id" element={<CreateProductForm />} />
+        <Route path="/products/form/" element={<AddProductForm />} />
+        {/* <Route path="/products/form/:idProduct" element={<CreateProductForm />} /> */}
+        <Route path="/products/form/edit/:idProduct" element={<EditProductForm />} />
 
         {/* 2. CÁC TRANG DÀNH CHO KHÁCH HÀNG (Hiển thị HomeList / Chi tiết) */}
         <Route path="/" element={<HomeList />} />
