@@ -1,147 +1,173 @@
-/* Cấu trúc layout tổng thể */
-.layout-wrapper {
-  display: flex;
-  height: 100vh;
-  background-color: #ffffff; /* Chuyển nền trắng tinh cho giống Nike */
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Font đặc trưng của Nike */
+/* HomeList.css */
+
+.clothing-showcase-container {
+  padding: 40px 0;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Khu vực nội dung chính */
-.apple-style-container {
-  padding: 40px 50px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.apple-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+.clothing-header {
+  padding: 0 50px;
   margin-bottom: 30px;
 }
 
-.apple-header h1 {
-  font-size: 32px; /* Thu nhỏ lại một chút cho gọn gàng */
-  font-weight: 500;
-  color: #111;
+.clothing-main-title {
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  color: #1d1d1f;
   margin: 0;
 }
 
-.apple-header a {
-  color: #111;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 500;
+.clothing-sub-title {
+  color: #86868b;
 }
 
-.apple-header a:hover {
-  text-decoration: underline;
-}
-
-/* --- LƯỚI SẢN PHẨM CHUẨN NIKE --- */
-.product-carousel {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Đổi từ cuộn ngang sang lưới 3 cột */
-  gap: 16px; /* Khoảng cách giữa các sản phẩm */
-  padding-bottom: 50px;
-}
-
-/* Thẻ sản phẩm */
-.product-card {
-  width: 100%;
-  cursor: pointer;
+/* KHUNG CHỨA CAROUSEL VÀ NÚT BẤM */
+.clothing-carousel-wrapper {
+  position: relative;
   display: flex;
-  flex-direction: column;
-}
-
-/* Khung chứa ảnh vuông vức */
-.image-box {
-  background-color: #f6f6f6;
-  border-radius: 0px; /* Bỏ hoàn toàn bo góc */
-  aspect-ratio: 4 / 5; /* Tỉ lệ khung ảnh dọc */
-  height: auto;
-  display: flex;
-  justify-content: center;
   align-items: center;
+}
+
+/* THANH CUỘN (TRACK) */
+.clothing-track {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 15px 50px 40px 50px;
+  scroll-snap-type: x mandatory; 
+  scroll-behavior: smooth;
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+.clothing-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* ----------------------------------
+   THẺ SẢN PHẨM (CARD)
+----------------------------------- */
+.clothing-card {
+  flex: 0 0 auto; 
+  width: 360px;      
+  height: 560px; /* Tăng chiều cao một chút để chứa cả ảnh full và text */
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: 2px 6px 20px rgba(0, 0, 0, 0.06);
+  scroll-snap-align: start; 
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column; /* Quan trọng: Ảnh trên, chữ dưới */
+  overflow: hidden; /* Cắt ảnh bo tròn theo viền thẻ */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.clothing-card:hover {
+  transform: scale(1.01);
+  box-shadow: 4px 12px 30px rgba(0, 0, 0, 0.12);
+}
+/* Khung anh */
+.clothing-image-box {
+  width: 100%;
+  height: 420px; /* Chiều cao cố định cho ảnh */
+  background-color: #f5f5f7;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
-.product-card:hover .image-box img {
-  transform: scale(1.05); /* Hiệu ứng zoom nhẹ ảnh */
-}
-
-.image-box img {
+.clothing-image-box img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; 
   transition: transform 0.4s ease;
 }
 
-/* Ẩn các chấm màu */
-.color-variants {
-  display: none; 
+.clothing-card:hover .clothing-image-box img {
+  transform: scale(1.03);
 }
 
-/* --- THÔNG TIN TEXT (CĂN TRÁI) --- */
-.product-info {
-  text-align: left;
+/* ----------------------------------
+   THÔNG TIN SẢN PHẨM (Ở DƯỚI - CĂN GIỮA)
+----------------------------------- */
+.clothing-info {
+  flex: 1; 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;  /* Căn giữa chiều ngang (dành cho Badge) */
+  justify-content: center; /* Căn giữa chiều dọc nguyên khối text */
+  text-align: center;   /* Căn giữa văn bản */
+  padding: 0 20px 20px 20px;
 }
 
-.product-status {
-  color: #9e3500; /* Màu cam đỏ đặc trưng */
-  font-size: 16px;
-  font-weight: 500;
+.clothing-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #bf4800; 
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.clothing-name {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+}
+
+.clothing-tagline {
+  font-size: 14px;
+  color: #86868b;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+
+.clothing-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
   margin: 0;
 }
 
-.product-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #111;
-  margin: 0;
+/* ----------------------------------
+   NÚT BẤM CHUYỂN SLIDE (KÍNH MỜ)
+----------------------------------- */
+.clothing-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  color: #333;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s, color 0.2s;
 }
 
-.product-tagline {
-  font-size: 16px;
-  color: #707072;
-  margin: 0;
-  font-weight: 400;
+.clothing-nav-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #000;
+  transform: translateY(-50%) scale(1.05);
 }
 
-.product-price {
-  font-size: 16px;
-  font-weight: 500;
-  color: #111;
-  margin-top: 8px;
+.clothing-nav-btn.left {
+  left: 20px; 
 }
 
-/* --- RESPONSIVE CHO ĐIỆN THOẠI / IPAD --- */
-@media (max-width: 1024px) {
-  .product-carousel { grid-template-columns: repeat(2, 1fr); }
-  .apple-style-container { padding: 30px; }
-}
-
-@media (max-width: 768px) {
-  .product-carousel { grid-template-columns: repeat(1, 1fr); }
-  .apple-style-container { padding: 20px; }
-}
-.product-carousel {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 40px;
-}
-.apple-style-container {
-  padding: 40px 50px;
+.clothing-nav-btn.right {
+  right: 20px; 
 }
