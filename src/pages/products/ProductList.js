@@ -5,17 +5,17 @@ export default function ProductList() {
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
-   
-<button 
-  className="btn-add-new"
-  onClick={() => navigate('/products/form')} 
->
-  + Thêm mới
-</button>
+
+  <button
+    className="btn-add-new"
+    onClick={() => navigate('/products/form')}
+  >
+    + Thêm mới
+  </button>
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products");
+        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/admin/products");
         if (!response.ok) {
           throw new Error("HTTP error " + response.status);
         }
@@ -39,7 +39,7 @@ export default function ProductList() {
 
     try {
       // 2. Gọi API xóa (Thêm id vào cuối link)
-      const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/api/v1/products/${id}`, {
+      const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${id}`, {
         method: 'DELETE',
       });
 
@@ -68,6 +68,7 @@ export default function ProductList() {
         <select className="f-select"><option>Danh mục</option><option>Áo</option><option>Quần</option><option>Váy</option></select>
         <select className="f-select"><option>Giới tính</option><option>Nam</option><option>Nữ</option></select>
         <select className="f-select"><option>Trạng thái</option><option>Đang bán</option><option>Ẩn</option></select>
+
         <input className="f-input" placeholder="Tìm tên, mã sản phẩm..." />
       </div>
 
@@ -76,11 +77,14 @@ export default function ProductList() {
           <table>
             <thead>
               <tr>
+                <th>id</th>
                 <th>Sản phẩm</th>
                 <th>Mã</th>
-                <th>Thương hiệu</th>
-                <th>Giá</th>
+                <th>Giá bán</th>
+                <th>Giá gốc</th>
+                <th>Giá vốn</th>
                 <th>Đã bán</th>
+                <th>Lượt xem</th>
                 <th>Badges</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
@@ -97,21 +101,22 @@ export default function ProductList() {
 
                 return (
                   <tr key={p.id}>
+                    <td>{p.id}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                        <div className="pthumb">🛍️</div>
                         <div>
                           <div className="td-b">{p.name}</div>
                           <div style={{ fontSize: '10px', color: 'var(--muted)' }}>
-                            {p.material || 'Chưa cập nhật'} · {genderText}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="td-mono">{p.code}</td>
-                    <td style={{ fontSize: '12px' }}>{p.brandName}</td>
                     <td className="td-b">{formattedPrice}</td>
+                    <td className="td-b">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.originalPrice || 0)}</td>
+                    <td className="td-b">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.costPrice || 0)}</td>
                     <td>{p.soldCount}</td>
+                    <td>{p.viewCount}</td>
                     <td>
                       {badges.length > 0 ? badges.map((b, i) => (
                         <span key={i} className={`badge ${b === 'SALE' ? 'b-sale' : 'b-new'}`} style={{ marginRight: '4px' }}>
@@ -127,10 +132,9 @@ export default function ProductList() {
                     <td>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         {/* ĐÃ SỬA: Thay item thành p ở dòng dưới đây */}
-                        <button className="btn btn-sm" onClick={() => navigate(`/products/form/${p.id}`, { state: { productData: p } })} >Sửa</button>
-                        
-                        <button 
-                          className="btn btn-sm" 
+                        <button className="btn btn-sm" onClick={() => navigate(`/products/form/edit/${p.id}`, { state: { productData: p } })} >Sửa</button>
+                        <button
+                          className="btn btn-sm"
                           style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
                           onClick={() => handleDelete(p.id, p.name)}
                         >
@@ -143,7 +147,7 @@ export default function ProductList() {
               })}
               {products.length === 0 && (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Đang tải dữ liệu...</td>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: '20px' }}>Đang tải dữ liệu...</td>
                 </tr>
               )}
             </tbody>
