@@ -1,13 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import HomeTopbar from '../../components/HomeTopbar';
 import AdsBanner from '../../components/AdsBanner';
 import './HomeList.css';
 
-// Kích hoạt thư viện tạo hiệu ứng AOS
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-
 
 const bannerImages = [
   'https://cdn.hstatic.net/1000281824/file/img_7821_3cbddeadfa224d8488587aae7c638bad.jpg',
@@ -15,95 +13,185 @@ const bannerImages = [
   'https://cdn.hstatic.net/1000281824/file/img_7818_da83504672314801a306fa8c6938d786.jpg' 
 ];
 
-// DỮ LIỆU SẢN PHẨM
-const StyleProducts = [
-  { 
-    id: 1, name: 'Áo', tagline: 'Thiết kế sáng tạo cho hiệu năng.',  
-    image: 'https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/a71c7394-e164-47f5-888d-3499847ea58f/M+NSW+SS+MAX+90+TEE+FR+SU26.png', 
-    colors: ['#1d1d1f', '#e3e4e5', '#d4af37'], categoryPath: '/ao-thun'
-  },
-  { 
-    id: 2, name: 'Quần ', tagline: 'Mỏng nhẹ nhất từng có.', 
-    image: 'https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/644ffad2-ba92-4c4c-8264-9e75ccf68937/AS+LJ+M+NK+PANT+FK.png', 
-    colors: ['#87ceeb', '#000000'], categoryPath: '/quan-jean'
-  },
-  { 
-    id: 3, name: 'Áo Khoác', tagline: 'Thú vị hơn hẳn.', 
-    image: 'https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/b9092de0-17db-419d-82d2-7121393bed5b/AS+KB+M+NK+JKT+ASW.png', 
-    colors: ['#e8b4b8', '#d6b8e8', '#b8cce8', '#1d1d1f'], categoryPath: '/ao-khoac'
-  },
-  { 
-    id: 4, name: 'Polo', tagline: 'Đủ tính năng. Vừa túi tiền.', 
-    image: 'https://www.rlmedia.io/is/image/PoloGSI/s7-1412366_alternate10?$rl_pdp_mob_zoom$', 
-    colors: ['#ffb6c1', '#ffffff', '#1d1d1f'], categoryPath: '/ao-thun'
-  },
-];
+const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
 
 export default function HomeList() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Chạy hiệu ứng khi trang web vừa load lên
+  // 1. STATE QUẢN LÝ DỮ LIỆU
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // State quản lý cuộn ngang
+  const carouselRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // 2. GỌI API KHI TRANG VỪA LOAD
   useEffect(() => {
-    AOS.init({
-      duration: 800, 
-      easing: 'ease-out-cubic', 
-      once: true, 
-      offset: 50, 
-    });
+    AOS.init({ duration: 800, easing: 'ease-out-cubic', once: true, offset: 50 });
+
+    const fetchProductsAndImages = async () => {
+      try {
+        setIsLoading(true);
+
+        // BƯỚC 1: Lấy danh sách sản phẩm (chỉ lấy loại active)
+        const productsResponse = await fetch(`${API_BASE_URL}/api/v1/products/active`);
+        const productsResult = await productsResponse.json();
+        
+        let rawProducts = [];
+        
+        if (Array.isArray(productsResult.data)) {
+          rawProducts = productsResult.data;
+        } else if (productsResult.data && Array.isArray(productsResult.data.content)) {
+          rawProducts = productsResult.data.content;
+        } else if (Array.isArray(productsResult)) {
+          rawProducts = productsResult;
+        } else if (productsResult.data && Array.isArray(productsResult.data.items)) {
+          rawProducts = productsResult.data.items;
+        } else {
+          console.error("Không tìm thấy mảng sản phẩm trong API response:", productsResult);
+        }
+
+        // BƯỚC 2: Gọi API lấy ảnh cho từng sản phẩm song song để tăng tốc độ
+        const formattedProducts = await Promise.all(
+          rawProducts.map(async (product) => {
+            let coverImage = 'https://placehold.co/380x440/e2e8f0/64748b?text=Chua+Co+Anh';
+
+            try {
+              const imageResponse = await fetch(`${API_BASE_URL}/api/v1/images/by-product/${product.id}`);
+              const imageResult = await imageResponse.json();
+              
+              if (imageResult.data && imageResult.data.length > 0) {
+                const primaryImage = imageResult.data.find(img => img.isPrimary === true);
+                coverImage = primaryImage ? primaryImage.imageUrl : imageResult.data[0].imageUrl;
+              }
+            } catch (err) {
+              console.error(`Không lấy được ảnh cho sản phẩm ID: ${product.id}`, err);
+            }
+
+            // BƯỚC 3: Map dữ liệu cho khớp với thẻ sản phẩm trên giao diện
+            return {
+              id: product.id,
+              name: product.name,
+              tagline: product.description || 'Sản phẩm nổi bật.',
+              price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
+              isNew: product.isNew || false,
+              image: coverImage,
+              categoryPath: null 
+            };
+          })
+        );
+
+        setProducts(formattedProducts);
+        
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu sản phẩm:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductsAndImages();
   }, []);
 
-  const filteredProducts = StyleProducts.filter(product => {
-    if (currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
+  // Cập nhật trạng thái hiển thị của nút qua lại khi dữ liệu đã load xong
+  useEffect(() => {
+    if (!isLoading) {
+      checkScrollability();
+      
+      // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
+      setTimeout(() => {
+        AOS.refresh();
+      }, 100);
+    }
+  }, [products, isLoading]);
+
+  // LỌC SẢN PHẨM: Sửa lại logic để không bị lỗi "Chưa có sản phẩm nào"
+  const filteredProducts = products.filter(product => {
+    if (currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
       return true; 
     }
-    return product.categoryPath === currentPath;
+    if (product.categoryPath) {
+       return product.categoryPath === currentPath;
+    }
+    return false;
   });
 
+  const scroll = (direction) => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -400 : 400; 
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const checkScrollability = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+    }
+  };
+
   return (
-    <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}> 
+    <div style={{ backgroundColor: '#fbfbfd', minHeight: '100vh', paddingBottom: '60px' }}> 
       
       <HomeTopbar />
 
-      <div className="apple-style-container">
+      <div className="clothing-showcase-container">
         {(currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') && (
             <AdsBanner images={bannerImages} />
         )}
 
-        <div className="apple-header" data-aos="fade-up">
-          <h1 style={{ fontSize: '48px', fontWeight: '600', letterSpacing: '-1px' }}>
-            Khám phá dòng sản phẩm.
-          </h1>
+        <div className="clothing-header" data-aos="fade-up">
+          <h2 className="clothing-main-title">
+            Các sản phẩm mới. <span className="clothing-sub-title">Xem ngay có gì mới.</span>
+          </h2>
         </div>
 
-        {filteredProducts.length > 0 ? (
-          <div className="product-carousel">
+        {/* XỬ LÝ GIAO DIỆN KHI ĐANG TẢI (LOADING) */}
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '100px 0', fontSize: '18px', color: '#86868b' }}>
+            Đang tải dữ liệu sản phẩm...
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          <div className="clothing-carousel-wrapper">
             
-            {filteredProducts.map((product, index) => (
-              
-              <Link 
-                to={`/san-pham/${product.id}`} 
-                key={product.id} 
-                className="product-card" 
-                style={{ textDecoration: 'none', color: 'inherit' }}
-                data-aos="fade-up" 
-                data-aos-delay={index * 100} 
-              >
-                <div className="image-box">
-                  <img src={product.image} alt={product.name} style={{ width: '100%', borderRadius: '20px' }} />
-                </div>
-                <div className="color-variants">
-                  {product.colors.map((color, idx) => (
-                    <div key={idx} className="dot" style={{ backgroundColor: color }} />
-                  ))}
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
-                  <p className="product-tagline">{product.tagline}</p>
-                </div>
-              </Link>
+            {canScrollLeft && (
+              <button className="clothing-nav-btn left" onClick={() => scroll('left')}>
+                ❮
+              </button>
+            )}
 
-            ))}
+            <div className="clothing-track" ref={carouselRef} onScroll={checkScrollability}>
+              {filteredProducts.map((product) => (
+                <Link to={`/san-pham/${product.id}`} key={product.id} className="clothing-card">
+                  
+                  {/* 1. ẢNH TRÊN CÙNG */}
+                  <div className="clothing-image-box">
+                    <img src={product.image} alt={product.name} /> 
+                  </div>
+                  
+                  {/* 2. THÔNG TIN SẢN PHẨM Ở DƯỚI */}
+                  <div className="clothing-info">
+                    {/* Hiện chữ MỚI màu cam nếu isNew = true */}
+                    {product.isNew && <span className="clothing-badge">MỚI</span>}
+                    <h3 className="clothing-name">{product.name}</h3>
+                    <p className="clothing-tagline">{product.tagline}</p>
+                    <p className="clothing-price">{product.price}</p>
+                  </div>
+
+                </Link>
+              ))}
+            </div>
+
+            {canScrollRight && (
+              <button className="clothing-nav-btn right" onClick={() => scroll('right')}>
+                ❯
+              </button>
+            )}
+
           </div>
         ) : (
           <div data-aos="fade-up" style={{ textAlign: 'center', padding: '100px 0', color: '#86868b' }}>

@@ -231,7 +231,11 @@ function AddProductForm() {
                         type="button"
                         className="add-product__back-btn"
 <<<<<<< HEAD
+<<<<<<< HEAD
                         onClick={() => console.log("Quay lại danh sách sản phẩm")}
+=======
+                        onClick={() => navigate("/products")}
+>>>>>>> main
 =======
                         onClick={() => navigate("/products")}
 >>>>>>> main
