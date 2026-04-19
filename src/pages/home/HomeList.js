@@ -37,6 +37,8 @@ export default function HomeList() {
         setIsLoading(true);
 
         // BƯỚC 1: Lấy danh sách sản phẩm
+        // LƯU Ý: Đảm bảo API này là API mới nhất mà team bạn đang dùng. 
+        // Nếu team backend chốt dùng '/api/v1/products/active' thì bạn nhớ sửa lại URL nhé.
         const productsResponse = await fetch(`${API_BASE_URL}/products`);
         
         if (!productsResponse.ok) {
@@ -64,7 +66,8 @@ export default function HomeList() {
             price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
             isNew: product.isNew || false,
             image: coverImage,
-            categoryPath: null 
+            // ĐÃ FIX LỖI Ở ĐÂY: Lấy categoryPath thực tế để chức năng lọc hoạt động
+            categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null 
           };
         });
 
@@ -80,17 +83,19 @@ export default function HomeList() {
     fetchProducts();
   }, []);
   
+  // Cập nhật trạng thái hiển thị của nút qua lại khi dữ liệu đã load xong
   useEffect(() => {
     if (!isLoading) {
       checkScrollability();
       
+      // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
       setTimeout(() => {
         AOS.refresh();
       }, 100);
     }
   }, [products, isLoading]);
 
-  // LỌC SẢN PHẨM
+  // LỌC SẢN PHẨM: Logic để không bị lỗi "Chưa có sản phẩm nào"
   const filteredProducts = products.filter(product => {
     if (currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
       return true; 
