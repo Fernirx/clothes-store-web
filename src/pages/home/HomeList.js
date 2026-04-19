@@ -32,57 +32,41 @@ export default function HomeList() {
   useEffect(() => {
     AOS.init({ duration: 800, easing: 'ease-out-cubic', once: true, offset: 50 });
 
-    const fetchProductsAndImages = async () => {
+    const fetchProducts = async () => {
       try {
         setIsLoading(true);
 
-        // BƯỚC 1: Lấy danh sách sản phẩm (chỉ lấy loại active)
-        const productsResponse = await fetch(`${API_BASE_URL}/api/v1/products/active`);
-        const productsResult = await productsResponse.json();
+        // BƯỚC 1: Lấy danh sách sản phẩm
+        const productsResponse = await fetch(`${API_BASE_URL}/products`);
         
-        let rawProducts = [];
-        
-        if (Array.isArray(productsResult.data)) {
-          rawProducts = productsResult.data;
-        } else if (productsResult.data && Array.isArray(productsResult.data.content)) {
-          rawProducts = productsResult.data.content;
-        } else if (Array.isArray(productsResult)) {
-          rawProducts = productsResult;
-        } else if (productsResult.data && Array.isArray(productsResult.data.items)) {
-          rawProducts = productsResult.data.items;
-        } else {
-          console.error("Không tìm thấy mảng sản phẩm trong API response:", productsResult);
+        if (!productsResponse.ok) {
+           throw new Error(`Lỗi server: ${productsResponse.status}`);
         }
 
-        // BƯỚC 2: Gọi API lấy ảnh cho từng sản phẩm song song để tăng tốc độ
-        const formattedProducts = await Promise.all(
-          rawProducts.map(async (product) => {
-            let coverImage = 'https://placehold.co/380x440/e2e8f0/64748b?text=Chua+Co+Anh';
+        const productsResult = await productsResponse.json();
+        
+        // Trích xuất mảng sản phẩm từ cấu trúc JSON mới (data.content)
+        const rawProducts = productsResult?.data?.content || [];
 
-            try {
-              const imageResponse = await fetch(`${API_BASE_URL}/api/v1/images/by-product/${product.id}`);
-              const imageResult = await imageResponse.json();
-              
-              if (imageResult.data && imageResult.data.length > 0) {
-                const primaryImage = imageResult.data.find(img => img.isPrimary === true);
-                coverImage = primaryImage ? primaryImage.imageUrl : imageResult.data[0].imageUrl;
-              }
-            } catch (err) {
-              console.error(`Không lấy được ảnh cho sản phẩm ID: ${product.id}`, err);
-            }
+        // BƯỚC 2: Map dữ liệu trực tiếp (Không cần gọi API phụ để lấy ảnh nữa)
+        const formattedProducts = rawProducts.map((product) => {
+          let coverImage = 'https://placehold.co/380x440/e2e8f0/64748b?text=Chua+Co+Anh';
 
-            // BƯỚC 3: Map dữ liệu cho khớp với thẻ sản phẩm trên giao diện
-            return {
-              id: product.id,
-              name: product.name,
-              tagline: product.description || 'Sản phẩm nổi bật.',
-              price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
-              isNew: product.isNew || false,
-              image: coverImage,
-              categoryPath: null 
-            };
-          })
-        );
+          // Kiểm tra và lấy ảnh từ colorPreviews (lấy ảnh của màu đầu tiên)
+          if (product.colorPreviews && product.colorPreviews.length > 0) {
+            coverImage = product.colorPreviews[0].primaryImage || coverImage;
+          }
+
+          return {
+            id: product.id || product.slug, // Đề phòng trường hợp API không trả id thì dùng slug làm key
+            name: product.name,
+            tagline: product.description || 'Sản phẩm nổi bật.',
+            price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
+            isNew: product.isNew || false,
+            image: coverImage,
+            categoryPath: null 
+          };
+        });
 
         setProducts(formattedProducts);
         
@@ -93,22 +77,20 @@ export default function HomeList() {
       }
     };
 
-    fetchProductsAndImages();
+    fetchProducts();
   }, []);
-
-  // Cập nhật trạng thái hiển thị của nút qua lại khi dữ liệu đã load xong
+  
   useEffect(() => {
     if (!isLoading) {
       checkScrollability();
       
-      // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
       setTimeout(() => {
         AOS.refresh();
       }, 100);
     }
   }, [products, isLoading]);
 
-  // LỌC SẢN PHẨM: Sửa lại logic để không bị lỗi "Chưa có sản phẩm nào"
+  // LỌC SẢN PHẨM
   const filteredProducts = products.filter(product => {
     if (currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
       return true; 
