@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import React, { useEffect, useMemo, useState } from "react";
 import "./EditProductForm.css";
 import { useNavigate, useParams } from "react-router-dom";
@@ -1372,4 +1370,3 @@ function EditProductForm() {
 }
 
 export default EditProductForm;
->>>>>>> main

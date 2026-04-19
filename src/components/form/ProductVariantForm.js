@@ -1,33 +1,14 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 import React from "react";
 
 function ProductVariantForm({
     variants,
-    variantCount,
-=======
-function ProductVariantForm({
-    variants,
->>>>>>> main
-=======
-function ProductVariantForm({
-    variants,
->>>>>>> main
     isVariantModalOpen,
     editingVariantId,
     variantForm,
     modalImages,
     isNewColorInModal,
     openAddVariant,
-<<<<<<< HEAD
-<<<<<<< HEAD
-    openEditVariant,
-=======
     editVariant,
->>>>>>> main
-=======
-    editVariant,
->>>>>>> main
     closeVariantModal,
     handleVariantFormChange,
     handleModalFiles,
@@ -36,21 +17,10 @@ function ProductVariantForm({
     saveVariant,
     toggleVariantActive,
     deleteVariant,
-<<<<<<< HEAD
-<<<<<<< HEAD
-}) {
-=======
     isSavingVariant,
 }) {
     const isEditMode = Boolean(editingVariantId);
 
->>>>>>> main
-=======
-    isSavingVariant,
-}) {
-    const isEditMode = Boolean(editingVariantId);
-
->>>>>>> main
     return (
         <>
             <section className="edit-product-page__card">
@@ -84,18 +54,6 @@ function ProductVariantForm({
                         <table className="edit-product-page__variant-table">
                             <thead>
                                 <tr>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-                                    <th>id</th>
->>>>>>> main
-                                    <th>Màu sắc</th>
-                                    <th>Mã màu</th>
-                                    <th>Size</th>
-                                    <th>SKU</th>
-                                    <th>Tồn kho</th>
-<<<<<<< HEAD
-=======
                                     <th>id</th>
                                     <th>Màu sắc</th>
                                     <th>Mã màu</th>
@@ -104,82 +62,43 @@ function ProductVariantForm({
                                     <th>Tồn kho</th>
                                     <th>Tồn kho thấp nhất</th>
                                     <th>Thứ tự hiển thị</th>
->>>>>>> main
-=======
-                                    <th>Tồn kho thấp nhất</th>
-                                    <th>Thứ tự hiển thị</th>
->>>>>>> main
                                     <th>Giá riêng</th>
                                     <th>Trạng thái</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-<<<<<<< HEAD
-<<<<<<< HEAD
-                                {variants.map((item) => (
-                                    <tr key={item.id}>
-                                        <td>
-                                            <span
-                                                className="edit-product-page__color-dot"
-                                                style={{ background: item.hex }}
-                                            />
-                                            {item.color}
-                                        </td>
-                                        <td>
-                                            <span className="edit-product-page__size-badge">
-                                                {item.size}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="edit-product-page__sku-text">
-                                                {item.sku}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={`edit-product-page__stock-num ${item.stock <= 5
-                                                        ? "edit-product-page__stock-num--low"
-                                                        : "edit-product-page__stock-num--ok"
+                                {variants.map((item) => {
+                                    const colorHex = item.colorHex || item.hex || "#888888";
+
+                                    return (
+                                        <tr key={item.id}>
+                                            <td>{item.id}</td>
+                                            <td>{item.color}</td>
+                                            <td>
+                                                <span
+                                                    className="edit-product-page__color-dot"
+                                                    style={{ background: colorHex }}
+                                                />
+                                                {colorHex}
+                                            </td>
+                                            <td>
+                                                <span className="edit-product-page__size-badge">
+                                                    {item.size}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className="edit-product-page__sku-text">
+                                                    {item.sku}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className={`edit-product-page__stock-num ${
+                                                        item.stock <= (item.minStockLevel ?? 5)
+                                                            ? "edit-product-page__stock-num--low"
+                                                            : "edit-product-page__stock-num--ok"
                                                     }`}
-                                            >
-                                                {item.stock}
-                                            </span>
-                                            {item.stock > 0 && item.stock <= 5 && (
-                                                <span className="edit-product-page__stock-low-text">
-                                                    thấp
-=======
-                                {variants.map((item) => {
-                                    const colorHex = item.colorHex || item.hex || "#888888";
-
-                                    return (
-                                        <tr key={item.id}>
-                                            <td>{item.id}</td>
-                                            <td>{item.color}</td>
-                                            <td>
-                                                <span
-                                                    className="edit-product-page__color-dot"
-                                                    style={{ background: colorHex }}
-                                                />
-                                                {colorHex}
-                                            </td>
-                                            <td>
-                                                <span className="edit-product-page__size-badge">
-                                                    {item.size}
->>>>>>> main
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className="edit-product-page__sku-text">
-                                                    {item.sku}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    className={`edit-product-page__stock-num ${item.stock <= (item.minStockLevel ?? 5)
-                                                            ? "edit-product-page__stock-num--low"
-                                                            : "edit-product-page__stock-num--ok"
-                                                        }`}
                                                 >
                                                     {item.stock}
                                                 </span>
@@ -204,84 +123,11 @@ function ProductVariantForm({
                                             <td>
                                                 <button
                                                     type="button"
-<<<<<<< HEAD
-                                                    className="edit-product-page__btn-ghost"
-                                                    onClick={() => openEditVariant(item.id)}
-                                                >
-                                                    Sửa
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="edit-product-page__btn-ghost edit-product-page__btn-ghost--danger"
-                                                    onClick={() => deleteVariant(item.id)}
-                                                >
-                                                    Xóa
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-=======
-                                {variants.map((item) => {
-                                    const colorHex = item.colorHex || item.hex || "#888888";
-
-                                    return (
-                                        <tr key={item.id}>
-                                            <td>{item.id}</td>
-                                            <td>{item.color}</td>
-                                            <td>
-                                                <span
-                                                    className="edit-product-page__color-dot"
-                                                    style={{ background: colorHex }}
-                                                />
-                                                {colorHex}
-                                            </td>
-                                            <td>
-                                                <span className="edit-product-page__size-badge">
-                                                    {item.size}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className="edit-product-page__sku-text">
-                                                    {item.sku}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    className={`edit-product-page__stock-num ${item.stock <= (item.minStockLevel ?? 5)
-                                                            ? "edit-product-page__stock-num--low"
-                                                            : "edit-product-page__stock-num--ok"
-                                                        }`}
-                                                >
-                                                    {item.stock}
-                                                </span>
-                                                {item.stock > 0 &&
-                                                    item.stock <= (item.minStockLevel ?? 5) && (
-                                                        <span className="edit-product-page__stock-low-text">
-                                                            thấp
-                                                        </span>
-                                                    )}
-                                            </td>
-                                            <td>{item.minStockLevel ?? 5}</td>
-                                            <td>{item.displayOrder ?? 0}</td>
-                                            <td>
-                                                {item.price ? (
-                                                    <>₫{Number(item.price).toLocaleString()}</>
-                                                ) : (
-                                                    <span className="edit-product-page__base-price-text">
-                                                        base
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <button
-                                                    type="button"
-=======
->>>>>>> main
-                                                    className={`edit-product-page__toggle ${item.active
+                                                    className={`edit-product-page__toggle ${
+                                                        item.active
                                                             ? "edit-product-page__toggle--on"
                                                             : ""
-                                                        }`}
+                                                    }`}
                                                     onClick={() => toggleVariantActive(item.id)}
                                                 />
                                             </td>
@@ -306,10 +152,6 @@ function ProductVariantForm({
                                         </tr>
                                     );
                                 })}
-<<<<<<< HEAD
->>>>>>> main
-=======
->>>>>>> main
                             </tbody>
                         </table>
                     </div>
@@ -317,8 +159,9 @@ function ProductVariantForm({
             </section>
 
             <div
-                className={`edit-product-page__modal-overlay ${isVariantModalOpen ? "edit-product-page__modal-overlay--open" : ""
-                    }`}
+                className={`edit-product-page__modal-overlay ${
+                    isVariantModalOpen ? "edit-product-page__modal-overlay--open" : ""
+                }`}
                 onClick={(e) => {
                     if (e.target === e.currentTarget) {
                         closeVariantModal();
@@ -327,167 +170,6 @@ function ProductVariantForm({
             >
                 <div className="edit-product-page__modal">
                     <div className="edit-product-page__modal-title">
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        {editingVariantId ? "Sửa variant" : "Thêm variant"}
-=======
-                        {isEditMode ? "Sửa variant" : "Thêm variant"}
->>>>>>> main
-                    </div>
-
-                    {!isEditMode && (
-                        <>
-                            <div className="edit-product-page__row edit-product-page__row--2">
-                                <div className="edit-product-page__field">
-                                    <label className="edit-product-page__label">
-                                        Màu sắc <span className="edit-product-page__req">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="edit-product-page__input"
-                                        placeholder="VD: Đỏ, Xanh navy"
-                                        value={variantForm.color}
-                                        onChange={(e) =>
-                                            handleVariantFormChange("color", e.target.value)
-                                        }
-                                    />
-                                </div>
-
-                                <div className="edit-product-page__field">
-                                    <label className="edit-product-page__label">Mã màu hex</label>
-                                    <div className="edit-product-page__hex-wrap">
-                                        <input
-                                            type="text"
-                                            className="edit-product-page__input"
-                                            placeholder="#FF0000"
-                                            value={variantForm.hex}
-                                            onChange={(e) =>
-                                                handleVariantFormChange("hex", e.target.value)
-                                            }
-                                        />
-                                        <input
-                                            type="color"
-                                            className="edit-product-page__color-picker"
-                                            value={variantForm.hex || "#888888"}
-                                            onChange={(e) =>
-                                                handleVariantFormChange("hex", e.target.value)
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="edit-product-page__row edit-product-page__row--2">
-                                <div className="edit-product-page__field">
-                                    <label className="edit-product-page__label">
-                                        Size <span className="edit-product-page__req">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="edit-product-page__input"
-                                        placeholder="S, M, L, XL, 28, 30..."
-                                        value={variantForm.size}
-                                        onChange={(e) =>
-                                            handleVariantFormChange("size", e.target.value)
-                                        }
-                                    />
-                                </div>
-
-                                <div className="edit-product-page__field">
-                                    <label className="edit-product-page__label">
-                                        SKU <span className="edit-product-page__req">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="edit-product-page__input"
-                                        placeholder="SP001-RED-M"
-                                        value={variantForm.sku}
-                                        onChange={(e) =>
-                                            handleVariantFormChange("sku", e.target.value)
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {isEditMode && (
-                        <div className="edit-product-page__row edit-product-page__row--2">
-                            <div className="edit-product-page__field">
-                                <label className="edit-product-page__label">Màu sắc</label>
-                                <input
-                                    type="text"
-                                    className="edit-product-page__input"
-                                    value={variantForm.color}
-                                    readOnly
-                                />
-                            </div>
-
-                            <div className="edit-product-page__field">
-                                <label className="edit-product-page__label">Mã màu hex</label>
-                                <input
-                                    type="text"
-                                    className="edit-product-page__input"
-                                    value={variantForm.hex}
-                                    readOnly
-                                />
-                            </div>
-
-                            <div className="edit-product-page__field">
-                                <label className="edit-product-page__label">Size</label>
-                                <input
-                                    type="text"
-                                    className="edit-product-page__input"
-                                    value={variantForm.size}
-                                    readOnly
-                                />
-                            </div>
-
-                            <div className="edit-product-page__field">
-                                <label className="edit-product-page__label">SKU</label>
-                                <input
-                                    type="text"
-                                    className="edit-product-page__input"
-                                    value={variantForm.sku}
-                                    readOnly
-                                />
-                            </div>
-                        </div>
-<<<<<<< HEAD
-                    </div>
-
-                    <div className="edit-product-page__row edit-product-page__row--2">
-                        <div className="edit-product-page__field">
-                            <label className="edit-product-page__label">
-                                Size <span className="edit-product-page__req">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                className="edit-product-page__input"
-                                placeholder="S, M, L, XL, 28, 30..."
-                                value={variantForm.size}
-                                onChange={(e) =>
-                                    handleVariantFormChange("size", e.target.value)
-                                }
-                            />
-                        </div>
-
-                        <div className="edit-product-page__field">
-                            <label className="edit-product-page__label">
-                                SKU <span className="edit-product-page__req">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                className="edit-product-page__input"
-                                placeholder="SP001-RED-M"
-                                value={variantForm.sku}
-                                onChange={(e) =>
-                                    handleVariantFormChange("sku", e.target.value)
-                                }
-                            />
-                        </div>
-                    </div>
-=======
                         {isEditMode ? "Sửa variant" : "Thêm variant"}
                     </div>
 
@@ -610,10 +292,6 @@ function ProductVariantForm({
                             </div>
                         </div>
                     )}
->>>>>>> main
-=======
-                    )}
->>>>>>> main
 
                     <div className="edit-product-page__row edit-product-page__row--2">
                         <div className="edit-product-page__field">
@@ -631,11 +309,6 @@ function ProductVariantForm({
 
                         <div className="edit-product-page__field">
                             <label className="edit-product-page__label">
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> main
                                 Tồn kho thấp nhất
                             </label>
                             <input
@@ -666,10 +339,6 @@ function ProductVariantForm({
 
                         <div className="edit-product-page__field">
                             <label className="edit-product-page__label">
-<<<<<<< HEAD
->>>>>>> main
-=======
->>>>>>> main
                                 Giá riêng
                                 <span className="edit-product-page__label-note">
                                     (để trống = dùng giá base)
@@ -690,15 +359,7 @@ function ProductVariantForm({
                         </div>
                     </div>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    {!editingVariantId && isNewColorInModal && (
-=======
                     {!isEditMode && isNewColorInModal && (
->>>>>>> main
-=======
-                    {!isEditMode && isNewColorInModal && (
->>>>>>> main
                         <div className="edit-product-page__modal-image-section">
                             <div className="edit-product-page__modal-image-title">
                                 Hình ảnh màu {variantForm.color.trim()}
@@ -727,10 +388,11 @@ function ProductVariantForm({
                                 {modalImages.map((img, index) => (
                                     <div
                                         key={img.id}
-                                        className={`edit-product-page__img-thumb edit-product-page__img-thumb--small ${img.primary
+                                        className={`edit-product-page__img-thumb edit-product-page__img-thumb--small ${
+                                            img.primary
                                                 ? "edit-product-page__img-thumb--primary"
                                                 : ""
-                                            }`}
+                                        }`}
                                         onClick={() => setModalPrimary(index)}
                                     >
                                         <img
@@ -764,14 +426,7 @@ function ProductVariantForm({
                             type="button"
                             className="edit-product-page__btn edit-product-page__btn--outline"
                             onClick={closeVariantModal}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
                             disabled={isSavingVariant}
->>>>>>> main
-=======
-                            disabled={isSavingVariant}
->>>>>>> main
                         >
                             Hủy
                         </button>
@@ -779,20 +434,9 @@ function ProductVariantForm({
                             type="button"
                             className="edit-product-page__btn edit-product-page__btn--primary"
                             onClick={saveVariant}
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        >
-                            Lưu variant
-=======
                             disabled={isSavingVariant}
                         >
                             {isSavingVariant ? "Đang lưu..." : "Lưu variant"}
->>>>>>> main
-=======
-                            disabled={isSavingVariant}
-                        >
-                            {isSavingVariant ? "Đang lưu..." : "Lưu variant"}
->>>>>>> main
                         </button>
                     </div>
                 </div>
