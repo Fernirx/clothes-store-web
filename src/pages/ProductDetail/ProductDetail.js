@@ -1,120 +1,230 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import './ProductDetail.css';
-// import Sidebar from '../../components/HomeSidebar'; // Trỏ đúng đường dẫn file của bạn
-import Topbar from '../../components/HomeTopbar';   // Nơi chứa giỏ hàng
+import Topbar from '../../components/HomeTopbar';
+
+const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
+
+const STANDARD_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 export default function ProductDetail() {
-  // State để lưu kích thước người dùng đang chọn
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [mainImgIndex, setMainImgIndex] = useState(0);
+  const { id: slug } = useParams(); 
+  const [productInfo, setProductInfo] = useState({});
+  const [allVariants, setAllVariants] = useState([]);
+  const [availableColors, setAvailableColors] = useState([]); 
+  const [sizesForColor, setSizesForColor] = useState([]);   
+  const [displayImages, setDisplayImages] = useState([]);   
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [mainImgIndex, setMainImgIndex] = useState(0); 
+  const [activeVariant, setActiveVariant] = useState(null); 
+  
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    const fetchDetailData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_BASE_URL}/products/${slug}`);
+        
+        if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
 
-  // Dữ liệu giả lập cho Quần Áo (Thay thế Nike)
-  const product = {
-    name: 'Áo Thun Nam Premium',
-    category: "Men's Clothing",
-    price: '350.000 ₫',
-    originalPrice: '500.000 ₫',
-    discount: '30% off',
-    sustainability: 'Chất liệu tái chế',
-    description: 'Chiếc áo thun cơ bản nhưng không hề đơn điệu. Được làm từ chất liệu cotton cao cấp pha sợi tổng hợp thân thiện với môi trường, mang lại cảm giác thoáng mát và form dáng đứng hoàn hảo cho mọi hoạt động thường ngày.',
-    details: [
-      'Màu sắc: Trắng/Đen',
-      'Mã sản phẩm: TS-8146-104',
-      'Sản xuất tại: Việt Nam'
-    ],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
-    images: [
-      'https://via.placeholder.com/600x800/f5f5f7/111111?text=Ao+Thun+Mat+Truoc',
-      'https://via.placeholder.com/600x800/f5f5f7/111111?text=Ao+Thun+Mat+Sau',
-      'https://via.placeholder.com/600x800/f5f5f7/111111?text=Ao+Thun+Goc+Nghieng',
-      'https://via.placeholder.com/600x800/f5f5f7/111111?text=Chi+Tiet+Vai'
-    ]
-  };
+        const json = await response.json();
+        const data = json.data;
+
+        if (data) {
+          setProductInfo(data);
+          setAllVariants(data.variants || []);
+
+          const colorsWithImages = data.imagesByColor || [];
+          setAvailableColors(colorsWithImages);
+
+          if (colorsWithImages.length > 0) {
+            setSelectedColor(colorsWithImages[0].color); 
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi tải chi tiết:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (slug) fetchDetailData();
+  }, [slug]);
+
+  useEffect(() => {
+    if (selectedColor && availableColors.length > 0) {
+      
+      const variantsForColor = allVariants.filter(v => v.color === selectedColor);
+      const availableSizesForThisColor = [...new Set(variantsForColor.map(v => v.size.toUpperCase()))];
+      setSizesForColor(availableSizesForThisColor);
+      if (!availableSizesForThisColor.includes(selectedSize)) {
+        setSelectedSize(''); 
+      }
+
+      // 2.2 Cập nhật list ảnh
+      const colorObj = availableColors.find(c => c.color === selectedColor);
+      if (colorObj && colorObj.images) {
+         const sortedImages = [...colorObj.images].sort((a, b) => (a.isPrimary === b.isPrimary) ? 0 : a.isPrimary ? -1 : 1);
+         setDisplayImages(sortedImages);
+      } else {
+         setDisplayImages([]);
+      }
+      
+      setMainImgIndex(0); 
+    }
+  }, [selectedColor, availableColors, allVariants]);
+  useEffect(() => {
+    if (selectedColor && selectedSize) {
+      const matched = allVariants.find(
+        // Cần in hoa v.size lên để phòng ngừa API trả về chữ thường (vd: "s")
+        v => v.color === selectedColor && v.size.toUpperCase() === selectedSize
+      );
+      setActiveVariant(matched || null);
+    } else {
+      setActiveVariant(null);
+    }
+  }, [selectedColor, selectedSize, allVariants]);
+
+
+  if (isLoading) return <div style={{ padding: '100px', textAlign: 'center' }}>Đang tải dữ liệu...</div>;
 
   return (
     <div className="layout-wrapper">
-      
       <div className="main-content">
-        <Topbar /> {/* Giỏ hàng nằm ở góc phải của Topbar này */}
+        <Topbar /> 
 
         <div className="product-detail-container">
           
-          {/* CỘT BÊN TRÁI: KHU VỰC HÌNH ẢNH */}
           <div className="product-gallery">
-            {/* Cột ảnh thu nhỏ */}
             <div className="thumbnail-list">
-              {product.images.map((img, index) => (
+              {displayImages.map((img, index) => (
                 <img 
                   key={index}
-                  src={img} 
+                  src={img.imageUrl} 
                   alt={`Thumbnail ${index}`} 
                   className={`thumbnail-item ${mainImgIndex === index ? 'active' : ''}`}
-                  onMouseEnter={() => setMainImgIndex(index)} // Di chuột vào là đổi ảnh chính
+                  onMouseEnter={() => setMainImgIndex(index)}
                 />
               ))}
             </div>
             
-            {/* Ảnh lớn */}
             <div className="main-image">
-              <img src={product.images[mainImgIndex]} alt={product.name} />
+              <img 
+                 src={displayImages[mainImgIndex]?.imageUrl || 'https://placehold.co/600x800?text=No+Image'} 
+                 alt={productInfo.name} 
+              />
             </div>
           </div>
 
-          {/* CỘT BÊN PHẢI: THÔNG TIN VÀ NÚT MUA */}
           <div className="product-info-panel">
-            <div className="sustainability-tag">{product.sustainability}</div>
-            <h1 className="product-title">{product.name}</h1>
-            <h2 className="product-category">{product.category}</h2>
+            <div className="sustainability-tag">{productInfo.material || 'Chất liệu tiêu chuẩn'}</div>
+            <h1 className="product-title">{productInfo.name}</h1>
+            <h2 className="product-category">{productInfo.brand?.name || 'Thời trang'}</h2> 
             
             <div className="product-price">
-              {product.price}
-              <span className="original-price" style={{marginLeft: '8px'}}>{product.originalPrice}</span>
-              <span className="discount-tag">{product.discount}</span>
+              {(activeVariant && activeVariant.price) 
+                 ? `${activeVariant.price.toLocaleString('vi-VN')} ₫` 
+                 : `${productInfo.basePrice?.toLocaleString('vi-VN')} ₫`}
+                 
+              {productInfo.originalPrice && (
+                 <span className="original-price" style={{marginLeft: '8px'}}>
+                    {productInfo.originalPrice.toLocaleString('vi-VN')} ₫
+                 </span>
+              )}
             </div>
 
-            {/* Chọn Size */}
+            <div className="color-selector" style={{ marginBottom: '20px' }}>
+              <div className="size-header" style={{ marginBottom: '10px' }}>
+                <span style={{ fontWeight: '500' }}>Màu sắc: {selectedColor}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {availableColors.map((cObj) => (
+                  <button
+                    key={cObj.color}
+                    onClick={() => setSelectedColor(cObj.color)}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      backgroundColor: cObj.colorHex || '#ccc',
+                      border: 'none',
+                      outline: selectedColor === cObj.color ? '2px solid #111' : '1px solid #ddd',
+                      outlineOffset: '2px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    title={cObj.color}
+                  />
+                ))}
+              </div>
+            </div>
+
             <div className="size-selector">
               <div className="size-header">
                 <span>Chọn Kích Thước</span>
                 <a href="#guide" style={{color: '#707072', textDecoration: 'none'}}>Bảng quy đổi kích cỡ</a>
               </div>
               <div className="size-grid">
-                {product.sizes.map(size => (
-                  <button 
-                    key={size}
-                    className={`size-btn ${selectedSize === size ? 'selected' : ''}`}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {/* Dùng thẳng mảng cố định STANDARD_SIZES thay vì map data từ API */}
+                {STANDARD_SIZES.map(size => {
+                  const isAvailable = sizesForColor.includes(size); 
+                  return (
+                    <button 
+                      key={size}
+                      disabled={!isAvailable}
+                      className={`size-btn ${selectedSize === size ? 'selected' : ''}`}
+                      onClick={() => setSelectedSize(size)}
+                      style={{
+                        opacity: isAvailable ? 1 : 0.4,
+                        cursor: isAvailable ? 'pointer' : 'not-allowed',
+                        backgroundColor: !isAvailable ? '#f5f5f5' : (selectedSize === size ? '#111' : '#fff'),
+                        color: !isAvailable ? '#a0a0a0' : (selectedSize === size ? '#fff' : '#111')
+                      }}
+                    >
+                      {size}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            {/* Các nút hành động */}
+            <div style={{ marginTop: '15px', marginBottom: '15px', minHeight: '24px' }}>
+               {activeVariant ? (
+                  <span style={{ color: activeVariant.stockQuantity > 0 ? '#10b981' : '#ef4444', fontWeight: '500' }}>
+                    {activeVariant.stockQuantity > 0 ? `Còn ${activeVariant.stockQuantity} sản phẩm` : 'Sản phẩm tạm hết hàng'}
+                  </span>
+               ) : (
+                  <span style={{ color: '#707072' }}>Vui lòng chọn Màu và Kích thước</span>
+               )}
+            </div>
+
             <div className="action-buttons">
               <button 
                 className="btn-add-cart"
+                disabled={!activeVariant || activeVariant.stockQuantity <= 0}
+                style={{
+                  opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
+                  cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
+                }}
                 onClick={() => {
-                  if(!selectedSize) alert('Vui lòng chọn kích thước trước khi thêm vào giỏ!');
-                  else alert(`Đã thêm ${product.name} (Size: ${selectedSize}) vào giỏ hàng!`);
+                  alert(`Đã thêm ${productInfo.name} (Màu: ${selectedColor}, Size: ${selectedSize}) vào giỏ hàng!`);
                 }}
               >
                 Thêm vào giỏ hàng
               </button>
-              <button className="btn-buy-now">
+              <button 
+                className="btn-buy-now"
+                disabled={!activeVariant || activeVariant.stockQuantity <= 0}
+                style={{
+                   opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
+                   cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
+                }}
+              >
                 Mua ngay
               </button>
             </div>
 
-            {/* Mô tả chi tiết */}
-            <div className="product-description">
-              <p>{product.description}</p>
-              <ul>
-                {product.details.map((detail, idx) => (
-                  <li key={idx}>{detail}</li>
-                ))}
-              </ul>
+            <div className="product-description" style={{ marginTop: '30px' }}>
+              <p>{productInfo.description || 'Chưa có mô tả cho sản phẩm này.'}</p>
             </div>
 
           </div>
