@@ -163,12 +163,14 @@ function AddProductForm() {
         };
 
         try {
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch(
                 "https://clothes-api.fernirx.io.vn/api/clothes/admin/products",
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "Authorization": `Bearer ${accessToken}` // gắn thêm token vào request
                     },
                     body: JSON.stringify(payload),
                 }
