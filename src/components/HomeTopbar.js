@@ -124,6 +124,7 @@ export default function HomeTopbar() {
           style={{ cursor: 'pointer', fontSize: '18px', position: 'relative' }}
           onMouseEnter={() => setIsHoverCart(true)}
           onMouseLeave={() => setIsHoverCart(false)}
+          onClick={() => navigate('/cart')} // <--- ĐÃ THÊM DÒNG NÀY ĐỂ CHUYỂN TRANG
         >
           🛒
           {totalQuantity > 0 && (
@@ -224,12 +225,9 @@ export default function HomeTopbar() {
                 </button>
                 <button
                   onClick={(e) => {
-                    e.stopPropagation(); // QUAN TRỌNG: Ngăn chặn sự kiện click lan ra ngoài làm đóng menu
-                    setShowLogout(false); // Đóng menu trước
-                    navigate('/dashboard'); // Sau đó mới điều hướng
-                  }}
-                  style={{
-                    // ... giữ nguyên style của bạn
+                    e.stopPropagation(); 
+                    setShowLogout(false); 
+                    navigate('/dashboard'); 
                   }}
                   style={{
                     width: '100%',

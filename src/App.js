@@ -21,6 +21,7 @@ import Inventory from './pages/inventory/Inventory';
 import Login from './pages/auth/login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
+import Cart from './pages/cart/Cart';
 
 // Import Pages (Customer)
 import HomeList from './pages/home/HomeList';
@@ -98,6 +99,7 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOTP />} />
 
         {/* 2. PUBLIC ROUTES - Customer Pages */}
+          <Route path="/cart" element={<Cart />} />
         <Route path="/" element={<HomeList />} />
         <Route path="/home" element={<HomeList />} />
         <Route path="/new-arrivals" element={<HomeList />} />
