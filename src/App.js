@@ -7,14 +7,11 @@ import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 
 // Import Pages (Admin & Auth)
-import Login from './pages/auth/login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
-import Brands from './pages/brands/Brands';
 import Coupons from './pages/coupons/Coupons';
 import Dashboard from './pages/dashboard/Dashboard';
 import Inventory from './pages/inventory/Inventory';
-import Notifications from './pages/notifications/Notifications';
 import OrderList from './pages/orders/OrderList';
 import ProductList from './pages/products/ProductList';
 import Reviews from './pages/reviews/Reviews';
@@ -22,10 +19,7 @@ import Suppliers from './pages/suppliers/Suppliers';
 import Users from './pages/users/Users';
 import Brands from './pages/brands/Brands';
 import Notifications from './pages/notifications/Notifications';
-import Inventory from './pages/inventory/Inventory';
 import Login from './pages/auth/login';
-import Register from './pages/auth/Register';
-import VerifyOTP from './pages/auth/VerifyOTP';
 import Cart from './pages/cart/Cart';
 
 // Import Pages (Customer)
@@ -107,7 +101,7 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOTP />} />
 
         {/* 2. PUBLIC ROUTES - Customer Pages */}
-          <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/" element={<HomeList />} />
         <Route path="/home" element={<HomeList />} />
         <Route path="/new-arrivals" element={<HomeList />} />
