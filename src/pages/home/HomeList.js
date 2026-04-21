@@ -10,7 +10,7 @@ import 'aos/dist/aos.css';
 const bannerImages = [
   'https://cdn.hstatic.net/1000281824/file/img_7821_3cbddeadfa224d8488587aae7c638bad.jpg',
   'https://cdn.hstatic.net/1000281824/file/degreyy1667_e220f839a785404893a5d66475d1c682.jpg',
-  'https://cdn.hstatic.net/1000281824/file/img_7818_da83504672314801a306fa8c6938d786.jpg' 
+  'https://cdn.hstatic.net/1000281824/file/img_7818_da83504672314801a306fa8c6938d786.jpg'
 ];
 
 const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
@@ -39,14 +39,20 @@ export default function HomeList() {
         // BƯỚC 1: Lấy danh sách sản phẩm
         // LƯU Ý: Đảm bảo API này là API mới nhất mà team bạn đang dùng. 
         // Nếu team backend chốt dùng '/api/v1/products/active' thì bạn nhớ sửa lại URL nhé.
-        const productsResponse = await fetch(`${API_BASE_URL}/products`);
-        
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+
+        const productsResponse = await fetch(`${API_BASE_URL}/products`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
         if (!productsResponse.ok) {
-           throw new Error(`Lỗi server: ${productsResponse.status}`);
+          throw new Error(`Lỗi server: ${productsResponse.status}`);
         }
 
         const productsResult = await productsResponse.json();
-        
+
         // Trích xuất mảng sản phẩm từ cấu trúc JSON mới (data.content)
         const rawProducts = productsResult?.data?.content || [];
 
@@ -67,12 +73,12 @@ export default function HomeList() {
             isNew: product.isNew || false,
             image: coverImage,
             // ĐÃ FIX LỖI Ở ĐÂY: Lấy categoryPath thực tế để chức năng lọc hoạt động
-            categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null 
+            categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null
           };
         });
 
         setProducts(formattedProducts);
-        
+
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu sản phẩm:", error);
       } finally {
@@ -82,12 +88,12 @@ export default function HomeList() {
 
     fetchProducts();
   }, []);
-  
+
   // Cập nhật trạng thái hiển thị của nút qua lại khi dữ liệu đã load xong
   useEffect(() => {
     if (!isLoading) {
       checkScrollability();
-      
+
       // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
       setTimeout(() => {
         AOS.refresh();
@@ -98,17 +104,17 @@ export default function HomeList() {
   // LỌC SẢN PHẨM: Logic để không bị lỗi "Chưa có sản phẩm nào"
   const filteredProducts = products.filter(product => {
     if (currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
-      return true; 
+      return true;
     }
     if (product.categoryPath) {
-       return product.categoryPath === currentPath;
+      return product.categoryPath === currentPath;
     }
     return false;
   });
 
   const scroll = (direction) => {
     if (carouselRef.current) {
-      const scrollAmount = direction === 'left' ? -400 : 400; 
+      const scrollAmount = direction === 'left' ? -400 : 400;
       carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
@@ -122,13 +128,13 @@ export default function HomeList() {
   };
 
   return (
-    <div style={{ backgroundColor: '#fbfbfd', minHeight: '100vh', paddingBottom: '60px' }}> 
-      
+    <div style={{ backgroundColor: '#fbfbfd', minHeight: '100vh', paddingBottom: '60px' }}>
+
       <HomeTopbar />
 
       <div className="clothing-showcase-container">
         {(currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') && (
-            <AdsBanner images={bannerImages} />
+          <AdsBanner images={bannerImages} />
         )}
 
         <div className="clothing-header" data-aos="fade-up">
@@ -144,7 +150,7 @@ export default function HomeList() {
           </div>
         ) : filteredProducts.length > 0 ? (
           <div className="clothing-carousel-wrapper">
-            
+
             {canScrollLeft && (
               <button className="clothing-nav-btn left" onClick={() => scroll('left')}>
                 ❮
@@ -154,12 +160,12 @@ export default function HomeList() {
             <div className="clothing-track" ref={carouselRef} onScroll={checkScrollability}>
               {filteredProducts.map((product) => (
                 <Link to={`/san-pham/${product.id}`} key={product.id} className="clothing-card">
-                  
+
                   {/* 1. ẢNH TRÊN CÙNG */}
                   <div className="clothing-image-box">
-                    <img src={product.image} alt={product.name} /> 
+                    <img src={product.image} alt={product.name} />
                   </div>
-                  
+
                   {/* 2. THÔNG TIN SẢN PHẨM Ở DƯỚI */}
                   <div className="clothing-info">
                     {/* Hiện chữ MỚI màu cam nếu isNew = true */}

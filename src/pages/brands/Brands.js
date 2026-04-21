@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { refreshAuth } from '../../components/refresh/refresh';
 
 const parseJsonSafe = async (response) => {
 	try {
@@ -21,26 +22,78 @@ export default function Brands() {
 		isActive: true
 	});
 
-	const apiUrl = process.env.REACT_APP_ROOT_API || 'https://clothes-api.fernirx.io.vn/api/clothes';
+	const apiUrl = process.env.REACT_APP_ROOT_API || 'https://clothes-api.fernirx.io.vn/api/clothes/';
+
+	// =========================================================
+	// HÀM CHUNG:
+	// - tự gắn accessToken vào header
+	// - nếu 401 thì refresh token đúng 1 lần
+	// - refresh thành công => retry lại request cũ
+	// - refresh thất bại => xóa token và chuyển về login
+	// =========================================================
+	const fetchWithAuthRetry = useCallback(async (url, options = {}, isRetry = false) => {
+		const accessToken = localStorage.getItem('accessToken');
+
+		const response = await fetch(url, {
+			...options,
+			headers: {
+				Accept: 'application/json',
+				...(options.headers || {}),
+				Authorization: `Bearer ${accessToken}`,
+			},
+		});
+
+		// Nếu accessToken hết hạn và đây chưa phải lần retry
+		if (response.status === 401 && !isRetry) {
+			try {
+				// refreshAuth phải tự lưu accessToken mới vào localStorage
+				const refreshResult = await refreshAuth();
+
+				// refresh thất bại -> đăng nhập lại
+				if (!refreshResult) {
+					localStorage.removeItem('accessToken');
+					alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+					window.location.href = '/login';
+					throw new Error('Refresh token thất bại');
+				}
+
+				// Refresh thành công -> gọi lại đúng request cũ, chỉ retry 1 lần
+				return await fetchWithAuthRetry(url, options, true);
+			} catch (error) {
+				localStorage.removeItem('accessToken');
+				alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+				window.location.href = '/login';
+				throw error;
+			}
+		}
+
+		return response;
+	}, []);
 
 	useEffect(() => {
 		const controller = new AbortController();
 
 		const fetchBrands = async () => {
 			try {
-				const response = await fetch(`${apiUrl}/api/v1/brands`, {
+				setIsLoading(true);
+
+				const response = await fetchWithAuthRetry(`${apiUrl}/brands`, {
 					signal: controller.signal,
-					headers: { Accept: 'application/json' }
+					method: 'GET',
 				});
+
 				if (!response.ok) {
 					throw new Error('HTTP error ' + response.status);
 				}
+
 				const result = await response.json();
 
 				if (result.data && result.data.content) {
 					setBrands(result.data.content);
 				} else if (Array.isArray(result.data)) {
 					setBrands(result.data);
+				} else {
+					setBrands([]);
 				}
 			} catch (error) {
 				if (error.name === 'AbortError') return;
@@ -57,11 +110,11 @@ export default function Brands() {
 		return () => {
 			controller.abort();
 		};
-	}, [apiUrl]);
+	}, [apiUrl, fetchWithAuthRetry]);
 
 	const handleInputChange = (e) => {
 		const { name, value, type, checked } = e.target;
-		setFormData(prev => ({
+		setFormData((prev) => ({
 			...prev,
 			[name]: type === 'checkbox' ? checked : value
 		}));
@@ -113,11 +166,10 @@ export default function Brands() {
 
 		if (editingId) {
 			try {
-				const response = await fetch(`${apiUrl}/api/v1/brands/${editingId}`, {
+				const response = await fetchWithAuthRetry(`${apiUrl}/admin/brands/${editingId}`, {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
-						Accept: 'application/json'
 					},
 					body: JSON.stringify(payload)
 				});
@@ -126,10 +178,11 @@ export default function Brands() {
 					const errorData = await parseJsonSafe(response);
 					throw new Error(errorData?.message || ('Cập nhật thất bại, mã lỗi: ' + response.status));
 				}
+
 				const result = await response.json();
 				const updatedBrand = result?.data || { ...payload, id: editingId };
 
-				const updatedBrands = brands.map(brand =>
+				const updatedBrands = brands.map((brand) =>
 					brand.id === editingId ? { ...brand, ...updatedBrand } : brand
 				);
 				setBrands(updatedBrands);
@@ -142,11 +195,10 @@ export default function Brands() {
 			}
 		} else {
 			try {
-				const response = await fetch(`${apiUrl}/api/v1/brands`, {
+				const response = await fetchWithAuthRetry(`${apiUrl}/admin/brands`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						Accept: 'application/json'
 					},
 					body: JSON.stringify(payload)
 				});
@@ -175,9 +227,8 @@ export default function Brands() {
 		if (!isConfirm) return;
 
 		try {
-			const response = await fetch(`${apiUrl}/api/v1/brands/${id}`, {
+			const response = await fetchWithAuthRetry(`${apiUrl}/admin/brands/${id}`, {
 				method: 'DELETE',
-				headers: { Accept: 'application/json' }
 			});
 
 			if (!response.ok) {
@@ -187,7 +238,7 @@ export default function Brands() {
 				return;
 			}
 
-			const updatedBrands = brands.filter(brand => brand.id !== id);
+			const updatedBrands = brands.filter((brand) => brand.id !== id);
 			setBrands(updatedBrands);
 
 			if (editingId === id) {

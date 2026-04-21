@@ -8,24 +8,29 @@ const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
 const STANDARD_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 export default function ProductDetail() {
-  const { id: slug } = useParams(); 
+  const { id: slug } = useParams();
   const [productInfo, setProductInfo] = useState({});
   const [allVariants, setAllVariants] = useState([]);
-  const [availableColors, setAvailableColors] = useState([]); 
-  const [sizesForColor, setSizesForColor] = useState([]);   
-  const [displayImages, setDisplayImages] = useState([]);   
+  const [availableColors, setAvailableColors] = useState([]);
+  const [sizesForColor, setSizesForColor] = useState([]);
+  const [displayImages, setDisplayImages] = useState([]);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
-  const [mainImgIndex, setMainImgIndex] = useState(0); 
-  const [activeVariant, setActiveVariant] = useState(null); 
-  
+  const [mainImgIndex, setMainImgIndex] = useState(0);
+  const [activeVariant, setActiveVariant] = useState(null);
+
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const fetchDetailData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${API_BASE_URL}/products/${slug}`);
-        
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+        const response = await fetch(`${API_BASE_URL}/products/${slug}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
 
         const json = await response.json();
@@ -39,7 +44,7 @@ export default function ProductDetail() {
           setAvailableColors(colorsWithImages);
 
           if (colorsWithImages.length > 0) {
-            setSelectedColor(colorsWithImages[0].color); 
+            setSelectedColor(colorsWithImages[0].color);
           }
         }
       } catch (error) {
@@ -54,24 +59,24 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (selectedColor && availableColors.length > 0) {
-      
+
       const variantsForColor = allVariants.filter(v => v.color === selectedColor);
       const availableSizesForThisColor = [...new Set(variantsForColor.map(v => v.size.toUpperCase()))];
       setSizesForColor(availableSizesForThisColor);
       if (!availableSizesForThisColor.includes(selectedSize)) {
-        setSelectedSize(''); 
+        setSelectedSize('');
       }
 
       // 2.2 Cập nhật list ảnh
       const colorObj = availableColors.find(c => c.color === selectedColor);
       if (colorObj && colorObj.images) {
-         const sortedImages = [...colorObj.images].sort((a, b) => (a.isPrimary === b.isPrimary) ? 0 : a.isPrimary ? -1 : 1);
-         setDisplayImages(sortedImages);
+        const sortedImages = [...colorObj.images].sort((a, b) => (a.isPrimary === b.isPrimary) ? 0 : a.isPrimary ? -1 : 1);
+        setDisplayImages(sortedImages);
       } else {
-         setDisplayImages([]);
+        setDisplayImages([]);
       }
-      
-      setMainImgIndex(0); 
+
+      setMainImgIndex(0);
     }
   }, [selectedColor, availableColors, allVariants]);
   useEffect(() => {
@@ -92,27 +97,27 @@ export default function ProductDetail() {
   return (
     <div className="layout-wrapper">
       <div className="main-content">
-        <Topbar /> 
+        <Topbar />
 
         <div className="product-detail-container">
-          
+
           <div className="product-gallery">
             <div className="thumbnail-list">
               {displayImages.map((img, index) => (
-                <img 
+                <img
                   key={index}
-                  src={img.imageUrl} 
-                  alt={`Thumbnail ${index}`} 
+                  src={img.imageUrl}
+                  alt={`Thumbnail ${index}`}
                   className={`thumbnail-item ${mainImgIndex === index ? 'active' : ''}`}
                   onMouseEnter={() => setMainImgIndex(index)}
                 />
               ))}
             </div>
-            
+
             <div className="main-image">
-              <img 
-                 src={displayImages[mainImgIndex]?.imageUrl || 'https://placehold.co/600x800?text=No+Image'} 
-                 alt={productInfo.name} 
+              <img
+                src={displayImages[mainImgIndex]?.imageUrl || 'https://placehold.co/600x800?text=No+Image'}
+                alt={productInfo.name}
               />
             </div>
           </div>
@@ -120,17 +125,17 @@ export default function ProductDetail() {
           <div className="product-info-panel">
             <div className="sustainability-tag">{productInfo.material || 'Chất liệu tiêu chuẩn'}</div>
             <h1 className="product-title">{productInfo.name}</h1>
-            <h2 className="product-category">{productInfo.brand?.name || 'Thời trang'}</h2> 
-            
+            <h2 className="product-category">{productInfo.brand?.name || 'Thời trang'}</h2>
+
             <div className="product-price">
-              {(activeVariant && activeVariant.price) 
-                 ? `${activeVariant.price.toLocaleString('vi-VN')} ₫` 
-                 : `${productInfo.basePrice?.toLocaleString('vi-VN')} ₫`}
-                 
+              {(activeVariant && activeVariant.price)
+                ? `${activeVariant.price.toLocaleString('vi-VN')} ₫`
+                : `${productInfo.basePrice?.toLocaleString('vi-VN')} ₫`}
+
               {productInfo.originalPrice && (
-                 <span className="original-price" style={{marginLeft: '8px'}}>
-                    {productInfo.originalPrice.toLocaleString('vi-VN')} ₫
-                 </span>
+                <span className="original-price" style={{ marginLeft: '8px' }}>
+                  {productInfo.originalPrice.toLocaleString('vi-VN')} ₫
+                </span>
               )}
             </div>
 
@@ -161,14 +166,14 @@ export default function ProductDetail() {
             <div className="size-selector">
               <div className="size-header">
                 <span>Chọn Kích Thước</span>
-                <a href="#guide" style={{color: '#707072', textDecoration: 'none'}}>Bảng quy đổi kích cỡ</a>
+                <a href="#guide" style={{ color: '#707072', textDecoration: 'none' }}>Bảng quy đổi kích cỡ</a>
               </div>
               <div className="size-grid">
                 {/* Dùng thẳng mảng cố định STANDARD_SIZES thay vì map data từ API */}
                 {STANDARD_SIZES.map(size => {
-                  const isAvailable = sizesForColor.includes(size); 
+                  const isAvailable = sizesForColor.includes(size);
                   return (
-                    <button 
+                    <button
                       key={size}
                       disabled={!isAvailable}
                       className={`size-btn ${selectedSize === size ? 'selected' : ''}`}
@@ -188,17 +193,17 @@ export default function ProductDetail() {
             </div>
 
             <div style={{ marginTop: '15px', marginBottom: '15px', minHeight: '24px' }}>
-               {activeVariant ? (
-                  <span style={{ color: activeVariant.stockQuantity > 0 ? '#10b981' : '#ef4444', fontWeight: '500' }}>
-                    {activeVariant.stockQuantity > 0 ? `Còn ${activeVariant.stockQuantity} sản phẩm` : 'Sản phẩm tạm hết hàng'}
-                  </span>
-               ) : (
-                  <span style={{ color: '#707072' }}>Vui lòng chọn Màu và Kích thước</span>
-               )}
+              {activeVariant ? (
+                <span style={{ color: activeVariant.stockQuantity > 0 ? '#10b981' : '#ef4444', fontWeight: '500' }}>
+                  {activeVariant.stockQuantity > 0 ? `Còn ${activeVariant.stockQuantity} sản phẩm` : 'Sản phẩm tạm hết hàng'}
+                </span>
+              ) : (
+                <span style={{ color: '#707072' }}>Vui lòng chọn Màu và Kích thước</span>
+              )}
             </div>
 
             <div className="action-buttons">
-              <button 
+              <button
                 className="btn-add-cart"
                 disabled={!activeVariant || activeVariant.stockQuantity <= 0}
                 style={{
@@ -211,12 +216,12 @@ export default function ProductDetail() {
               >
                 Thêm vào giỏ hàng
               </button>
-              <button 
+              <button
                 className="btn-buy-now"
                 disabled={!activeVariant || activeVariant.stockQuantity <= 0}
                 style={{
-                   opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
-                   cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
+                  opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
+                  cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
                 }}
               >
                 Mua ngay
