@@ -1,9 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { refreshAuth } from '../../components/refresh/refresh';
+
+const parseJsonSafe = async (response) => {
+    try {
+        return await response.json();
+    } catch (_) {
+        return null;
+    }
+};
 
 export default function Suppliers() {
     const [suppliers, setSuppliers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const [sortBy, setSortBy] = useState('id');
+    const [sortDir, setSortDir] = useState('asc');
 
     // State theo dõi xem đang sửa nhà cung cấp nào (null = đang ở chế độ Thêm mới)
     const [editingId, setEditingId] = useState(null);
@@ -20,42 +34,88 @@ export default function Suppliers() {
 
     const apiUrl = process.env.REACT_APP_ROOT_API || 'https://clothes-api.fernirx.io.vn/api/clothes';
 
+    const fetchWithAuthRetry = useCallback(async (url, options = {}, isRetry = false) => {
+        const accessToken = localStorage.getItem('accessToken');
+
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                Accept: 'application/json',
+                ...(options.headers || {}),
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            }
+        });
+
+        if (response.status === 401 && !isRetry) {
+            try {
+                const refreshResult = await refreshAuth();
+                if (!refreshResult) {
+                    localStorage.removeItem('accessToken');
+                    alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                    window.location.href = '/login';
+                    throw new Error('Refresh token thất bại');
+                }
+
+                return await fetchWithAuthRetry(url, options, true);
+            } catch (error) {
+                localStorage.removeItem('accessToken');
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                window.location.href = '/login';
+                throw error;
+            }
+        }
+
+        return response;
+    }, []);
+
+    const fetchSuppliers = useCallback(async () => {
+        try {
+            setIsLoading(true);
+
+            const params = new URLSearchParams({
+                page: String(page),
+                size: String(size),
+                sortBy,
+                sortDir
+            });
+
+            const response = await fetchWithAuthRetry(`${apiUrl}/admin/suppliers?${params.toString()}`, {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                const errorData = await parseJsonSafe(response);
+                throw new Error(errorData?.message || ('HTTP error ' + response.status));
+            }
+
+            const result = await response.json();
+            if (result?.data?.content) {
+                setSuppliers(result.data.content);
+                setTotalPages(result.data.totalPages || 0);
+                setTotalElements(result.data.totalElements || 0);
+            } else if (Array.isArray(result?.data)) {
+                setSuppliers(result.data);
+                setTotalPages(1);
+                setTotalElements(result.data.length);
+            } else {
+                setSuppliers([]);
+                setTotalPages(0);
+                setTotalElements(0);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu nhà cung cấp:', error);
+            setSuppliers([]);
+            setTotalPages(0);
+            setTotalElements(0);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [apiUrl, fetchWithAuthRetry, page, size, sortBy, sortDir]);
+
     // 1. GET: LẤY DANH SÁCH
     useEffect(() => {
-        const fetchSuppliers = async () => {
-            try {
-                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
-                const response = await fetch(`${apiUrl}/admin/suppliers`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error("HTTP error " + response.status);
-                }
-                // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        await refreshAuth(); // Hàm này phải return true/false
-                        return fetchSuppliers(); // Gọi lại chính nó để lấy data sau khi refresh
-                    }
-                    throw new Error(`Lỗi server: ${response.status}`);
-                }
-                const result = await response.json();
-
-                if (result.data && result.data.content) {
-                    setSuppliers(result.data.content);
-                } else if (Array.isArray(result.data)) {
-                    setSuppliers(result.data);
-                }
-            } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu nhà cung cấp:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchSuppliers();
-    }, [apiUrl]);
+    }, [fetchSuppliers]);
 
     // XỬ LÝ KHI GÕ VÀO FORM
     const handleInputChange = (e) => {
@@ -86,6 +146,16 @@ export default function Suppliers() {
         setFormData({ name: '', code: '', email: '', phone: '', address: '', isActive: true });
     };
 
+    const handleSortChange = (field) => {
+        if (sortBy === field) {
+            setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(field);
+            setSortDir('asc');
+        }
+        setPage(0);
+    };
+
     // 4. SUBMIT FORM: XỬ LÝ CẢ THÊM MỚI (POST) VÀ CẬP NHẬT (PUT)
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -96,62 +166,81 @@ export default function Suppliers() {
         }
         if (editingId) {
             try {
+                const payload = {
+                    ...formData,
+                    name: formData.name.trim(),
+                    code: formData.code.trim(),
+                    email: formData.email.trim(),
+                    phone: formData.phone.trim(),
+                    address: formData.address.trim()
+                };
 
-                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
-                const response = await fetch(`${apiUrl}/admin/suppliers/${editingId}`, {
+                const response = await fetchWithAuthRetry(`${apiUrl}/admin/suppliers/${editingId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${accessToken}`
+                        Accept: 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
-                // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        await refreshAuth(); // Hàm này phải return true/false
-                    }
-                    throw new Error(`Lỗi server: ${response.status}`);
-                }
-                // -------------------------------
 
-                const updatedSuppliers = suppliers.map(supplier =>
-                    supplier.id === editingId ? { ...supplier, ...formData } : supplier
-                );
-                setSuppliers(updatedSuppliers);
+                if (!response.ok) {
+                    const errorData = await parseJsonSafe(response);
+                    throw new Error(errorData?.message || ('Cập nhật thất bại, mã lỗi: ' + response.status));
+                }
+
+                const result = await response.json();
+                const updatedSupplier = result?.data || { ...payload, id: editingId };
+
+                setSuppliers(prev => prev.map(supplier =>
+                    supplier.id === editingId ? { ...supplier, ...updatedSupplier } : supplier
+                ));
 
                 alert(`Đã cập nhật thành công nhà cung cấp: ${formData.name}`);
                 handleCancelEdit(); // Reset form về chế độ thêm mới
+                fetchSuppliers();
 
             } catch (error) {
                 console.error("Lỗi khi cập nhật nhà cung cấp:", error);
-                alert("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại!");
+                alert(error.message || 'Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại!');
             }
 
         } else {
             try {
-                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
-                const response = await fetch(`${apiUrl}/api/v1/suppliers`, {
+                const payload = {
+                    ...formData,
+                    name: formData.name.trim(),
+                    code: formData.code.trim(),
+                    email: formData.email.trim(),
+                    phone: formData.phone.trim(),
+                    address: formData.address.trim()
+                };
+
+                const response = await fetchWithAuthRetry(`${apiUrl}/admin/suppliers`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${accessToken}`
+                        Accept: 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error("Thêm thất bại, mã lỗi: " + response.status);
+                if (!response.ok) {
+                    const errorData = await parseJsonSafe(response);
+                    throw new Error(errorData?.message || ('Thêm thất bại, mã lỗi: ' + response.status));
+                }
 
                 const result = await response.json();
-                const newSupplier = result.data || { ...formData, id: Date.now() }; // Fallback id nếu API không trả về
+                const newSupplier = result.data || { ...payload, id: Date.now() };
 
-                setSuppliers([newSupplier, ...suppliers]);
+                setSuppliers(prev => [newSupplier, ...prev]);
                 setFormData({ name: '', code: '', email: '', phone: '', address: '', isActive: true });
-                alert(`Đã thêm thành công nhà cung cấp: ${formData.name}`);
+                alert(`Đã thêm thành công nhà cung cấp: ${payload.name}`);
+                fetchSuppliers();
 
             } catch (error) {
                 console.error("Lỗi khi thêm nhà cung cấp:", error);
-                alert("Đã xảy ra lỗi khi thêm. Vui lòng thử lại!");
+                alert(error.message || 'Đã xảy ra lỗi khi thêm. Vui lòng thử lại!');
             }
         }
     };
@@ -162,26 +251,19 @@ export default function Suppliers() {
         if (!isConfirm) return;
 
         try {
-            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
-            const response = await fetch(`${apiUrl}/admin/suppliers/${id}`, {
+            const response = await fetchWithAuthRetry(`${apiUrl}/admin/suppliers/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    Authorization: `Bearer ${accessToken}`
+                    Accept: 'application/json'
                 }
             });
-            // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+
             if (!response.ok) {
-                if (response.status === 401) {
-                    await refreshAuth(); // Hàm này phải return true/false
-                }
-                throw new Error(`Lỗi server: ${response.status}`);
+                const errorData = await parseJsonSafe(response);
+                throw new Error(errorData?.message || ('Xóa thất bại, mã lỗi: ' + response.status));
             }
-            // -------------------------------
 
-            if (!response.ok) throw new Error("Xóa thất bại, mã lỗi: " + response.status);
-
-            const updatedSuppliers = suppliers.filter(supplier => supplier.id !== id);
-            setSuppliers(updatedSuppliers);
+            setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
 
             // Nếu đang sửa chính thằng vừa bị xóa thì reset form
             if (editingId === id) {
@@ -189,9 +271,10 @@ export default function Suppliers() {
             }
 
             alert(`Đã xóa thành công nhà cung cấp ${name}`);
+            fetchSuppliers();
         } catch (error) {
             console.error("Lỗi khi xóa nhà cung cấp:", error);
-            alert("Đã xảy ra lỗi khi xóa. Vui lòng thử lại!");
+            alert(error.message || 'Đã xảy ra lỗi khi xóa. Vui lòng thử lại!');
         }
     };
 
@@ -239,13 +322,19 @@ export default function Suppliers() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Nhà cung cấp</th>
-                                <th>Mã</th>
+                                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('name')}>
+                                    Nhà cung cấp {sortBy === 'name' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                                </th>
+                                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('code')}>
+                                    Mã {sortBy === 'code' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                                </th>
                                 <th>Liên hệ</th>
                                 <th>Email</th>
                                 <th>Đơn nhập</th>
                                 <th>Tổng chi</th>
-                                <th>Trạng thái</th>
+                                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('isActive')}>
+                                    Trạng thái {sortBy === 'isActive' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                                </th>
                                 <th>Hành động</th>
                             </tr>
                         </thead>
@@ -300,6 +389,70 @@ export default function Suppliers() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', padding: '10px 0', borderTop: '1px solid #e0e0e0' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                        Hiển thị {suppliers.length > 0 ? (page * size + 1) : 0} - {Math.min((page + 1) * size, totalElements)} trong {totalElements} nhà cung cấp
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                        <button
+                            onClick={() => setPage(Math.max(0, page - 1))}
+                            disabled={page === 0}
+                            style={{
+                                padding: '6px 12px',
+                                fontSize: '13px',
+                                backgroundColor: page === 0 ? '#e0e0e0' : '#0d6efd',
+                                color: page === 0 ? '#999' : 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: page === 0 ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            ← Trước
+                        </button>
+
+                        <span style={{ padding: '0 8px', fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>
+                            {totalPages > 0 ? `${page + 1} / ${totalPages}` : '—'}
+                        </span>
+
+                        <button
+                            onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                            disabled={page >= totalPages - 1 || totalPages === 0}
+                            style={{
+                                padding: '6px 12px',
+                                fontSize: '13px',
+                                backgroundColor: page >= totalPages - 1 || totalPages === 0 ? '#e0e0e0' : '#0d6efd',
+                                color: page >= totalPages - 1 || totalPages === 0 ? '#999' : 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: page >= totalPages - 1 || totalPages === 0 ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Sau →
+                        </button>
+
+                        <select
+                            value={size}
+                            onChange={(e) => {
+                                setSize(Number(e.target.value));
+                                setPage(0);
+                            }}
+                            style={{
+                                padding: '6px 8px',
+                                fontSize: '13px',
+                                border: '1px solid #ced4da',
+                                borderRadius: '4px',
+                                marginLeft: '10px'
+                            }}
+                        >
+                            <option value="5">5 / trang</option>
+                            <option value="10">10 / trang</option>
+                            <option value="20">20 / trang</option>
+                            <option value="50">50 / trang</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>

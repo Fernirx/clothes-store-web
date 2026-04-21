@@ -405,7 +405,7 @@ function ProductVariantForm({
                                             className="edit-product-page__img-del"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                removeModalImage(index);
+                                                removeModalImage(index, img.id);
                                             }}
                                         >
                                             ×
