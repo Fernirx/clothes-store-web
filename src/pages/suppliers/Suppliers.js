@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAuth } from '../../components/refresh/refresh';
 
 export default function Suppliers() {
     const [suppliers, setSuppliers] = useState([]);
@@ -23,9 +24,22 @@ export default function Suppliers() {
     useEffect(() => {
         const fetchSuppliers = async () => {
             try {
-                const response = await fetch(`${apiUrl}/api/v1/suppliers`);
+                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+                const response = await fetch(`${apiUrl}/admin/suppliers`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
                 if (!response.ok) {
                     throw new Error("HTTP error " + response.status);
+                }
+                // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        await refreshAuth(); // Hàm này phải return true/false
+                        return fetchSuppliers(); // Gọi lại chính nó để lấy data sau khi refresh
+                    }
+                    throw new Error(`Lỗi server: ${response.status}`);
                 }
                 const result = await response.json();
 
@@ -75,24 +89,37 @@ export default function Suppliers() {
     // 4. SUBMIT FORM: XỬ LÝ CẢ THÊM MỚI (POST) VÀ CẬP NHẬT (PUT)
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.name.trim()) {
             alert("Vui lòng nhập Tên nhà cung cấp!");
             return;
         }
         if (editingId) {
             try {
-                const response = await fetch(`${apiUrl}/api/v1/suppliers/${editingId}`, {
+
+                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+                const response = await fetch(`${apiUrl}/admin/suppliers/${editingId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify(formData)
                 });
-                if (!response.ok) throw new Error("Cập nhật thất bại, mã lỗi: " + response.status);
-                const updatedSuppliers = suppliers.map(supplier => 
+                // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        await refreshAuth(); // Hàm này phải return true/false
+                    }
+                    throw new Error(`Lỗi server: ${response.status}`);
+                }
+                // -------------------------------
+
+                const updatedSuppliers = suppliers.map(supplier =>
                     supplier.id === editingId ? { ...supplier, ...formData } : supplier
                 );
                 setSuppliers(updatedSuppliers);
-                
+
                 alert(`Đã cập nhật thành công nhà cung cấp: ${formData.name}`);
                 handleCancelEdit(); // Reset form về chế độ thêm mới
 
@@ -103,9 +130,13 @@ export default function Suppliers() {
 
         } else {
             try {
+                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
                 const response = await fetch(`${apiUrl}/api/v1/suppliers`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify(formData)
                 });
 
@@ -131,12 +162,24 @@ export default function Suppliers() {
         if (!isConfirm) return;
 
         try {
-            const response = await fetch(`${apiUrl}/api/v1/suppliers/${id}`, {
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+            const response = await fetch(`${apiUrl}/admin/suppliers/${id}`, {
                 method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
             });
+            // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+            if (!response.ok) {
+                if (response.status === 401) {
+                    await refreshAuth(); // Hàm này phải return true/false
+                }
+                throw new Error(`Lỗi server: ${response.status}`);
+            }
+            // -------------------------------
 
             if (!response.ok) throw new Error("Xóa thất bại, mã lỗi: " + response.status);
-            
+
             const updatedSuppliers = suppliers.filter(supplier => supplier.id !== id);
             setSuppliers(updatedSuppliers);
 
@@ -165,20 +208,20 @@ export default function Suppliers() {
 
             {/* ====== FORM THÊM MỚI / CẬP NHẬT INLINE ====== */}
             <form onSubmit={handleSubmit} className="card" style={{ padding: '15px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', backgroundColor: editingId ? '#fff3cd' : '#f8f9fa', border: `1px dashed ${editingId ? '#ffc107' : '#ced4da'}` }}>
-                {editingId && <strong style={{color: '#856404', width: '100%'}}>Đang chỉnh sửa nhà cung cấp...</strong>}
-                
+                {editingId && <strong style={{ color: '#856404', width: '100%' }}>Đang chỉnh sửa nhà cung cấp...</strong>}
+
                 <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Tên NCC (*)" className="f-input" style={{ flex: '1 1 150px' }} required />
                 <input type="text" name="code" value={formData.code} onChange={handleInputChange} placeholder="Mã NCC" className="f-input" style={{ flex: '1 1 100px' }} />
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="f-input" style={{ flex: '1 1 150px' }} />
                 <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Số điện thoại" className="f-input" style={{ flex: '1 1 120px' }} />
                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Địa chỉ" className="f-input" style={{ flex: '1 1 150px' }} />
-                
+
                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleInputChange} />
                     Hoạt động
                 </label>
-                
-                <div style={{display: 'flex', gap: '5px'}}>
+
+                <div style={{ display: 'flex', gap: '5px' }}>
                     <button type="submit" className="btn" style={{ backgroundColor: editingId ? '#28a745' : '#0d6efd', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                         {editingId ? "Lưu thay đổi" : "+ Thêm"}
                     </button>
@@ -236,7 +279,7 @@ export default function Suppliers() {
                                             <td><span className={`badge ${statusClass}`}>{statusText}</span></td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button 
+                                                    <button
                                                         className="btn btn-sm"
                                                         onClick={() => handleEditClick(supplier)} // Gọi hàm sửa
                                                     >

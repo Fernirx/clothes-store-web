@@ -15,7 +15,13 @@ export default function ProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/admin/products");
+
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/admin/products", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
         if (!response.ok) {
           throw new Error("HTTP error " + response.status);
         }
@@ -39,8 +45,13 @@ export default function ProductList() {
 
     try {
       // 2. Gọi API xóa (Thêm id vào cuối link)
+
+      const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
       const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${id}`, {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
       });
 
       if (!response.ok) {

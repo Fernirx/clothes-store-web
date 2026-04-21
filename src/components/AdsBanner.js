@@ -6,15 +6,15 @@ export default function AdsBanner({ images }) {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [showArrows, setShowArrows] = useState(false);
 
- 
+
   useEffect(() => {
     let intervalId;
     if (isAutoPlaying) {
       intervalId = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 3000); 
+      }, 3000);
     }
-    return () => clearInterval(intervalId); 
+    return () => clearInterval(intervalId);
   }, [isAutoPlaying, images.length]);
 
   const goToPrev = () => {
@@ -28,7 +28,7 @@ export default function AdsBanner({ images }) {
   if (!images || images.length === 0) return null;
 
   return (
-    <div 
+    <div
       className="ad-banner-container"
       data-aos="fade-up"
       onMouseEnter={() => {
@@ -43,10 +43,10 @@ export default function AdsBanner({ images }) {
       <div className="image-wrapper">
         {/* Render tất cả ảnh, dùng CSS để ẩn/hiện tạo hiệu ứng mờ dần */}
         {images.map((img, index) => (
-          <img 
+          <img
             key={index}
-            src={img} 
-            alt={`Ad ${index + 1}`} 
+            src={img}
+            alt={`Ad ${index + 1}`}
             className={`banner-image ${index === currentIndex ? 'active' : ''}`}
           />
         ))}
