@@ -1,0 +1,9 @@
+.payment-layout {
+  min-height: 100vh;
+  background: #f4f6fa;
+  color: #0f172a;
+}
+
+.payment-main {
+  min-height: calc(100vh - 60px);
+}
