@@ -9,14 +9,20 @@ export default function Inventory() {
         const fetchAdjustmentData = async () => {
             try {
                 // Sửa URL: Lấy danh sách phiếu thay vì lấy 1 phiếu cụ thể bằng {id}
-                const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/stock-adjustments");
-                
+                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+
+                const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/api/v1/stock-adjustments", {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
                 if (!response.ok) {
                     throw new Error("HTTP error " + response.status);
                 }
 
                 const result = await response.json();
-                
+
                 // Logic xử lý giống code Suppliers của bạn
                 if (result.data && result.data.content) {
                     setAdjustmentTickets(result.data.content);
@@ -49,7 +55,7 @@ export default function Inventory() {
     // Hàm xác định class CSS cho trạng thái phiếu
     const getStatusClass = (status) => {
         switch (status) {
-            case 'DRAFT': return 'b-draft'; 
+            case 'DRAFT': return 'b-draft';
             case 'CONFIRMED': return 'b-completed';
             default: return 'b-pending';
         }

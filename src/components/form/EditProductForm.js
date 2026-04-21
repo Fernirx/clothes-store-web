@@ -141,12 +141,14 @@ function EditProductForm() {
         };
 
         try {
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch(
                 `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}`,
                 {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                     },
                     body: JSON.stringify(payload),
                 }
@@ -180,12 +182,14 @@ function EditProductForm() {
                 isActive: nextIsActive,
             };
 
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch(
                 `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants/${id}`,
                 {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                     },
                     credentials: "include",
                     body: JSON.stringify(payload),
@@ -244,12 +248,15 @@ function EditProductForm() {
         if (!confirmed) return;
 
         try {
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+
             const response = await fetch(
                 `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants/${id}`,
                 {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                     },
                     credentials: "include",
                 }
@@ -271,12 +278,15 @@ function EditProductForm() {
     const uploadMediaImage = async (file) => {
         const formData = new FormData();
         formData.append("file", file);
-
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
         const response = await fetch(
             "https://clothes-api.fernirx.io.vn/api/clothes/media/image?context=PRODUCT",
             {
                 method: "POST",
                 body: formData,
+                headers: {
+                    Authorization: `Bearer ${accessToken}`, // thêm header Authorization
+                },
                 credentials: "include",
             }
         );
@@ -298,12 +308,14 @@ function EditProductForm() {
         imagePublicId,
         isPrimary,
     }) => {
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
         const response = await fetch(
             `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${productId}/images`,
             {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                 },
                 credentials: "include",
                 body: JSON.stringify({
@@ -448,13 +460,14 @@ function EditProductForm() {
                     minStockLevel,
                     displayOrder,
                 };
-
+                const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
                 const response = await fetch(
                     `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants/${editingVariantId}`,
                     {
                         method: "PATCH",
                         headers: {
                             "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                         },
                         credentials: "include",
                         body: JSON.stringify(payload),
@@ -558,12 +571,14 @@ function EditProductForm() {
                 displayOrder,
             };
 
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch(
                 `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${idProduct}/variants`,
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                     },
                     credentials: "include",
                     body: JSON.stringify(payload),
@@ -659,13 +674,27 @@ function EditProductForm() {
         );
     };
 
-    const removeModalImage = (index) => {
+    const removeModalImage = (index, id) => {
         setModalImages((prev) => {
             const next = prev.filter((_, i) => i !== index);
             if (next.length > 0 && !next.some((img) => img.primary)) {
                 next[0].primary = true;
             }
-            return next;
+            // try { 
+            //     const response = await fetch(
+            //     `https://clothes-api.fernirx.io.vn/api/clothes/media/image`,
+            //     {
+            //         method: "DELETE",
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //         },
+            //         body: JSON.stringify({ publicId: id }),
+            //     }
+            // );
+            // } catch (error) {
+            //     console.error("Có lỗi xảy ra khi gọi API:", error);
+            // }
+            // return next;
         });
     };
 
@@ -808,12 +837,14 @@ function EditProductForm() {
 
     const getProductVariants = async (productId) => {
         try {
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch(
                 `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${productId}/variants`,
                 {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                     },
                 }
             );
@@ -852,12 +883,14 @@ function EditProductForm() {
             setLoadingProduct(true);
             setProductError("");
 
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch(
                 `https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${productId}`,
                 {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`, // thêm header Authorization
                     },
                 }
             );
@@ -1359,6 +1392,8 @@ function EditProductForm() {
                 )}
             </div>
 
+            {/* danh mục */}
+
             <div
                 className={`edit-product-page__toast ${toastMessage ? "edit-product-page__toast--show" : ""
                     }`}
@@ -1370,4 +1405,3 @@ function EditProductForm() {
 }
 
 export default EditProductForm;
->>>>>>> main

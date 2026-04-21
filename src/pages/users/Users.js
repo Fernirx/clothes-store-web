@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAuth } from '../../components/refresh/refresh';
 
 // --- CÁC HÀM HELPER ---
 const getNameFromEmail = (email) => {
@@ -19,7 +20,7 @@ const formatDate = (isoString) => {
 };
 
 const getAvatarClass = (role) => {
-    return role === 'ADMIN' ? 'av-orange' : 'av-blue'; 
+    return role === 'ADMIN' ? 'av-orange' : 'av-blue';
 };
 
 export default function Users() {
@@ -31,17 +32,17 @@ export default function Users() {
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(20);
     const [refresh, setRefresh] = useState(false);
-    
+
     // Thêm state quản lý màn hình Thùng rác
     const [isViewTrash, setIsViewTrash] = useState(false);
 
     // --- STATE FORM ---
     const [showForm, setShowForm] = useState(false);
-    const [formMode, setFormMode] = useState('add'); 
+    const [formMode, setFormMode] = useState('add');
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [formData, setFormData] = useState({
         email: '',
-        password: '', 
+        password: '',
         role: 'USER',
         provider: 'LOCAL',
         active: true
@@ -57,13 +58,26 @@ export default function Users() {
                 if (filterRole) queryParams.append('role', filterRole);
                 if (filterProvider === 'Email') queryParams.append('provider', 'LOCAL');
                 if (filterProvider === 'Google') queryParams.append('provider', 'GOOGLE');
-                
-                // Đổi endpoint dựa vào trạng thái xem
+
                 const endpoint = isViewTrash ? 'users/trash' : 'users';
-                const url = `https://clothes-api.fernirx.io.vn/api/clothes/${endpoint}?${queryParams.toString()}`;
-                
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Lỗi mạng hoặc server');
+                const url = `https://clothes-api.fernirx.io.vn/api/clothes/admin/${endpoint}?${queryParams.toString()}`;
+
+                const accessToken = localStorage.getItem("accessToken");
+                const response = await fetch(url, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        await refreshAuth(); // Hàm này phải return true/false
+                        fetchUsers(); // Gọi lại chính nó để lấy data
+                    }
+                    throw new Error(`Lỗi server: ${response.status}`);
+                }
+                // -------------------------------
 
                 const apiData = await response.json();
                 if (apiData.data && apiData.data.content) {
@@ -71,10 +85,10 @@ export default function Users() {
                         id: user.id,
                         name: getNameFromEmail(user.email),
                         initials: getInitials(getNameFromEmail(user.email)),
-                        avatarClass: getAvatarClass(user.role),
+                        avatarClass: getAvatarClass(user.roles && user.roles[0]), // Lưu ý BE trả về mảng roles
                         email: user.email,
-                        role: user.role,
-                        roleClass: user.role === 'ADMIN' ? 'b-admin' : 'b-user',
+                        role: user.roles && user.roles[0], // BE của bạn trả về mảng ["ROLE_USER"]
+                        roleClass: user.roles?.includes('ROLE_ADMIN') ? 'b-admin' : 'b-user',
                         provider: user.provider,
                         loginBy: user.provider === 'LOCAL' ? 'Email' : user.provider,
                         joined: formatDate(user.createdAt),
@@ -85,24 +99,36 @@ export default function Users() {
                     setUsers(formattedUsers);
                 }
             } catch (error) {
-                console.error("Lỗi khi fetch API:", error);
+                console.error("Lỗi hệ thống:", error.message);
             } finally {
                 setLoading(false);
             }
         };
         fetchUsers();
-    // Thêm isViewTrash vào dependency array để load lại data khi đổi chế độ
-    }, [filterRole, filterProvider, page, size, refresh, isViewTrash]); 
+    }, [filterRole, filterProvider, page, size, refresh, isViewTrash]);
 
     // --- XỬ LÝ XÓA MỀM (Soft Delete) ---
     const handleDelete = async (userId, userEmail) => {
         const isConfirm = window.confirm(`Bạn có chắc chắn muốn chuyển tài khoản ${userEmail} vào thùng rác?`);
         if (!isConfirm) return;
         try {
-            const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/users/${userId}`, { method: 'DELETE' });
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+            if (!response.ok) {
+                if (response.status === 401) {
+                    await refreshAuth(); // Hàm này phải return true/false
+                }
+                throw new Error(`Lỗi server: ${response.status}`);
+            }
             if (response.ok) {
                 setRefresh(!refresh);
-                if (selectedUserId === userId) setShowForm(false); 
+                if (selectedUserId === userId) setShowForm(false);
             } else alert('Xóa thất bại.');
         } catch (error) {
             alert('Lỗi kết nối máy chủ!');
@@ -114,7 +140,20 @@ export default function Users() {
         const isConfirm = window.confirm(`Bạn có chắc muốn khôi phục tài khoản ${userEmail}?`);
         if (!isConfirm) return;
         try {
-            const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/users/${userId}/restore`, { method: 'PATCH' });
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/admin/users/${userId}/restore`, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+            if (!response.ok) {
+                if (response.status === 401) {
+                    await refreshAuth(); // Hàm này phải return true/false
+                }
+                throw new Error(`Lỗi server: ${response.status}`);
+            }
             if (response.ok) {
                 setRefresh(!refresh);
                 alert('Đã khôi phục người dùng!');
@@ -129,7 +168,20 @@ export default function Users() {
         const isConfirm = window.confirm(`CẢNH BÁO: Bạn có chắc muốn xóa VĨNH VIỄN tài khoản ${userEmail}? Hành động này không thể hoàn tác!`);
         if (!isConfirm) return;
         try {
-            const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/users/${userId}/hard`, { method: 'DELETE' });
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/admin/users/${userId}/hard`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+            if (!response.ok) {
+                if (response.status === 401) {
+                    await refreshAuth(); // Hàm này phải return true/false
+                }
+                throw new Error(`Lỗi server: ${response.status}`);
+            }
             if (response.ok) {
                 setRefresh(!refresh);
                 alert('Đã xóa vĩnh viễn người dùng!');
@@ -149,12 +201,12 @@ export default function Users() {
     const handleOpenEditForm = (user) => {
         setFormMode('edit');
         setSelectedUserId(user.id);
-        setFormData({ 
-            email: user.email, 
-            password: '', 
-            role: user.role, 
-            provider: user.provider, 
-            active: user.active 
+        setFormData({
+            email: user.email,
+            password: '',
+            role: user.role,
+            provider: user.provider,
+            active: user.active
         });
         setShowForm(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -168,46 +220,56 @@ export default function Users() {
         }));
     };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
 
-    const url = formMode === 'add' 
-        ? 'https://clothes-api.fernirx.io.vn/api/clothes/users'
-        : `https://clothes-api.fernirx.io.vn/api/clothes/users/${selectedUserId}`;
-    const method = formMode === 'add' ? 'POST' : 'PATCH';
-    
-    // Tạo bản sao của dữ liệu form để gửi đi
-    const payload = { ...formData };
-    
-    // NẾU LÀ SỬA (EDIT): Bắt buộc xóa password và email khỏi payload
-    if (formMode === 'edit') {
-        delete payload.password; 
-        delete payload.email;     // THÊM DÒNG NÀY ĐỂ TRÁNH LỖI 409
-        delete payload.provider;  // (Tùy chọn) Xóa luôn provider vì cũng không cho đổi
-    }
+        const url = formMode === 'add'
+            ? 'https://clothes-api.fernirx.io.vn/api/clothes/admin/users'
+            : `https://clothes-api.fernirx.io.vn/api/clothes/admin/users/${selectedUserId}`;
+        const method = formMode === 'add' ? 'POST' : 'PATCH';
 
-    try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        // Tạo bản sao của dữ liệu form để gửi đi
+        const payload = { ...formData };
 
-        if (response.ok) {
-            alert(formMode === 'add' ? 'Thêm thành công!' : 'Cập nhật thành công!');
-            setShowForm(false);
-            setRefresh(!refresh);
-        } else {
-            alert('Có lỗi xảy ra, vui lòng kiểm tra lại dữ liệu.');
+        // NẾU LÀ SỬA (EDIT): Bắt buộc xóa password và email khỏi payload
+        if (formMode === 'edit') {
+            delete payload.password;
+            delete payload.email;     // THÊM DÒNG NÀY ĐỂ TRÁNH LỖI 409
+            delete payload.provider;  // (Tùy chọn) Xóa luôn provider vì cũng không cho đổi
         }
-    } catch (error) {
-        console.error("Lỗi submit form:", error);
-        alert('Lỗi kết nối máy chủ!');
-    } finally {
-        setIsSaving(false);
-    }
-};
+
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(payload)
+            });
+            // --- ĐOẠN SỬA QUAN TRỌNG NHẤT goi refresh neu 401 ---
+            if (!response.ok) {
+                if (response.status === 401) {
+                    await refreshAuth(); // Hàm này phải return true/false
+                }
+                throw new Error(`Lỗi server: ${response.status}`);
+            }
+            if (response.ok) {
+                alert(formMode === 'add' ? 'Thêm thành công!' : 'Cập nhật thành công!');
+                setShowForm(false);
+                setRefresh(!refresh);
+            } else {
+                alert('Có lỗi xảy ra, vui lòng kiểm tra lại dữ liệu.');
+            }
+        } catch (error) {
+            console.error("Lỗi submit form:", error);
+            alert('Lỗi kết nối máy chủ!');
+        } finally {
+            setIsSaving(false);
+        }
+    };
     const toggleTrashView = () => {
         setIsViewTrash(!isViewTrash);
         setShowForm(false); // Đóng form nếu đang mở
@@ -224,7 +286,7 @@ const handleSubmit = async (e) => {
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                     {/* Nút chuyển đổi Thùng rác / Danh sách */}
-                    <button 
+                    <button
                         className="btn"
                         style={{ background: '#f8f9fa', color: '#333', border: '1px solid #ccc', padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                         onClick={toggleTrashView}
@@ -234,7 +296,7 @@ const handleSubmit = async (e) => {
 
                     {/* Chỉ hiện Thêm mới ở màn hình danh sách chính */}
                     {!isViewTrash && (
-                        <button 
+                        <button
                             className="btn btn-primary"
                             style={{ background: '#007bff', color: '#fff', border: '1px solid #007bff', padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                             onClick={handleOpenAddForm}
@@ -264,29 +326,29 @@ const handleSubmit = async (e) => {
             {showForm && !isViewTrash && (
                 <div className="card" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #007bff' }}>
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
-                        
-                        <input 
-                            type="email" 
-                            name="email" 
-                            placeholder="Email (*)" 
-                            className="f-input" 
+
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email (*)"
+                            className="f-input"
                             style={{ minWidth: '200px' }}
-                            value={formData.email} 
-                            onChange={handleInputChange} 
-                            disabled={formMode === 'edit'} 
-                            required 
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            disabled={formMode === 'edit'}
+                            required
                         />
-                        
+
                         {formMode === 'add' && (
-                            <input 
-                                type="password" 
-                                name="password" 
-                                placeholder="Mật khẩu (*)" 
-                                className="f-input" 
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="Mật khẩu (*)"
+                                className="f-input"
                                 style={{ minWidth: '150px' }}
-                                value={formData.password} 
-                                onChange={handleInputChange} 
-                                required 
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                required
                             />
                         )}
 
@@ -301,27 +363,27 @@ const handleSubmit = async (e) => {
                         </select>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <input 
-                                type="checkbox" 
-                                name="active" 
+                            <input
+                                type="checkbox"
+                                name="active"
                                 id="statusActive"
-                                checked={formData.active} 
-                                onChange={handleInputChange} 
+                                checked={formData.active}
+                                onChange={handleInputChange}
                                 style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                             />
                             <label htmlFor="statusActive" style={{ margin: 0, cursor: 'pointer', fontWeight: '500' }}>Hoạt động</label>
                         </div>
 
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-                            <button 
-                                type="button" 
-                                onClick={() => setShowForm(false)} 
+                            <button
+                                type="button"
+                                onClick={() => setShowForm(false)}
                                 style={{ padding: '8px 16px', background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }}
                             >
                                 Hủy
                             </button>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 style={{ padding: '8px 16px', background: formMode === 'add' ? '#007bff' : '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                                 disabled={isSaving}
                             >
@@ -373,15 +435,15 @@ const handleSubmit = async (e) => {
                                                 {/* Render Các Nút Tùy Chế Độ Xem */}
                                                 {isViewTrash ? (
                                                     <>
-                                                        <button 
-                                                            className="btn btn-sm" 
+                                                        <button
+                                                            className="btn btn-sm"
                                                             style={{ border: '1px solid #28a745', background: '#e9fbee', color: '#28a745', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
                                                             onClick={() => handleRestore(user.id, user.email)}
                                                         >
                                                             Khôi phục
                                                         </button>
-                                                        <button 
-                                                            className="btn btn-sm" 
+                                                        <button
+                                                            className="btn btn-sm"
                                                             style={{ backgroundColor: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
                                                             onClick={() => handleHardDelete(user.id, user.email)}
                                                         >
@@ -390,15 +452,15 @@ const handleSubmit = async (e) => {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <button 
-                                                            className="btn btn-sm" 
+                                                        <button
+                                                            className="btn btn-sm"
                                                             style={{ border: '1px solid #ddd', background: '#fff', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
                                                             onClick={() => handleOpenEditForm(user)}
                                                         >
                                                             Sửa
                                                         </button>
-                                                        <button 
-                                                            className="btn btn-sm" 
+                                                        <button
+                                                            className="btn btn-sm"
                                                             style={{ backgroundColor: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
                                                             onClick={() => handleDelete(user.id, user.email)}
                                                         >

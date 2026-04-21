@@ -200,10 +200,13 @@ function AddProductForm() {
     const [apiBrands, setApiBrands] = useState([]);
     const apiBranch = async () => {
         try {
+
+            const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
             const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/admin/brands", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken}`
                 },
             });
 

@@ -15,7 +15,13 @@ export default function ProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/admin/products");
+
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+        const response = await fetch("https://clothes-api.fernirx.io.vn/api/clothes/admin/products", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
         if (!response.ok) {
           throw new Error("HTTP error " + response.status);
         }
@@ -39,8 +45,13 @@ export default function ProductList() {
 
     try {
       // 2. Gọi API xóa (Thêm id vào cuối link)
+
+      const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
       const response = await fetch(`https://clothes-api.fernirx.io.vn/api/clothes/admin/products/${id}`, {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
       });
 
       if (!response.ok) {
@@ -133,7 +144,6 @@ export default function ProductList() {
                       <div style={{ display: 'flex', gap: '8px' }}>
                         {/* ĐÃ SỬA: Thay item thành p ở dòng dưới đây */}
                         <button className="btn btn-sm" onClick={() => navigate(`/products/form/edit/${p.id}`, { state: { productData: p } })} >Sửa</button>
-
                         <button
                           className="btn btn-sm"
                           style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}

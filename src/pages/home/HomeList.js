@@ -10,7 +10,7 @@ import 'aos/dist/aos.css';
 const bannerImages = [
   'https://cdn.hstatic.net/1000281824/file/img_7821_3cbddeadfa224d8488587aae7c638bad.jpg',
   'https://cdn.hstatic.net/1000281824/file/degreyy1667_e220f839a785404893a5d66475d1c682.jpg',
-  'https://cdn.hstatic.net/1000281824/file/img_7818_da83504672314801a306fa8c6938d786.jpg' 
+  'https://cdn.hstatic.net/1000281824/file/img_7818_da83504672314801a306fa8c6938d786.jpg'
 ];
 
 const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
@@ -32,60 +32,53 @@ export default function HomeList() {
   useEffect(() => {
     AOS.init({ duration: 800, easing: 'ease-out-cubic', once: true, offset: 50 });
 
-    const fetchProductsAndImages = async () => {
+    const fetchProducts = async () => {
       try {
         setIsLoading(true);
 
-        // BƯỚC 1: Lấy danh sách sản phẩm (chỉ lấy loại active)
-        const productsResponse = await fetch(`${API_BASE_URL}/api/v1/products/active`);
-        const productsResult = await productsResponse.json();
-        
-        let rawProducts = [];
-        
-        if (Array.isArray(productsResult.data)) {
-          rawProducts = productsResult.data;
-        } else if (productsResult.data && Array.isArray(productsResult.data.content)) {
-          rawProducts = productsResult.data.content;
-        } else if (Array.isArray(productsResult)) {
-          rawProducts = productsResult;
-        } else if (productsResult.data && Array.isArray(productsResult.data.items)) {
-          rawProducts = productsResult.data.items;
-        } else {
-          console.error("Không tìm thấy mảng sản phẩm trong API response:", productsResult);
+        // BƯỚC 1: Lấy danh sách sản phẩm
+        // LƯU Ý: Đảm bảo API này là API mới nhất mà team bạn đang dùng. 
+        // Nếu team backend chốt dùng '/api/v1/products/active' thì bạn nhớ sửa lại URL nhé.
+        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+
+        const productsResponse = await fetch(`${API_BASE_URL}/products`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
+        if (!productsResponse.ok) {
+          throw new Error(`Lỗi server: ${productsResponse.status}`);
         }
 
-        // BƯỚC 2: Gọi API lấy ảnh cho từng sản phẩm song song để tăng tốc độ
-        const formattedProducts = await Promise.all(
-          rawProducts.map(async (product) => {
-            let coverImage = 'https://placehold.co/380x440/e2e8f0/64748b?text=Chua+Co+Anh';
+        const productsResult = await productsResponse.json();
 
-            try {
-              const imageResponse = await fetch(`${API_BASE_URL}/api/v1/images/by-product/${product.id}`);
-              const imageResult = await imageResponse.json();
-              
-              if (imageResult.data && imageResult.data.length > 0) {
-                const primaryImage = imageResult.data.find(img => img.isPrimary === true);
-                coverImage = primaryImage ? primaryImage.imageUrl : imageResult.data[0].imageUrl;
-              }
-            } catch (err) {
-              console.error(`Không lấy được ảnh cho sản phẩm ID: ${product.id}`, err);
-            }
+        // Trích xuất mảng sản phẩm từ cấu trúc JSON mới (data.content)
+        const rawProducts = productsResult?.data?.content || [];
 
-            // BƯỚC 3: Map dữ liệu cho khớp với thẻ sản phẩm trên giao diện
-            return {
-              id: product.id,
-              name: product.name,
-              tagline: product.description || 'Sản phẩm nổi bật.',
-              price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
-              isNew: product.isNew || false,
-              image: coverImage,
-              categoryPath: null 
-            };
-          })
-        );
+        // BƯỚC 2: Map dữ liệu trực tiếp (Không cần gọi API phụ để lấy ảnh nữa)
+        const formattedProducts = rawProducts.map((product) => {
+          let coverImage = 'https://placehold.co/380x440/e2e8f0/64748b?text=Chua+Co+Anh';
+
+          // Kiểm tra và lấy ảnh từ colorPreviews (lấy ảnh của màu đầu tiên)
+          if (product.colorPreviews && product.colorPreviews.length > 0) {
+            coverImage = product.colorPreviews[0].primaryImage || coverImage;
+          }
+
+          return {
+            id: product.id || product.slug, // Đề phòng trường hợp API không trả id thì dùng slug làm key
+            name: product.name,
+            tagline: product.description || 'Sản phẩm nổi bật.',
+            price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
+            isNew: product.isNew || false,
+            image: coverImage,
+            // ĐÃ FIX LỖI Ở ĐÂY: Lấy categoryPath thực tế để chức năng lọc hoạt động
+            categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null
+          };
+        });
 
         setProducts(formattedProducts);
-        
+
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu sản phẩm:", error);
       } finally {
@@ -93,14 +86,14 @@ export default function HomeList() {
       }
     };
 
-    fetchProductsAndImages();
+    fetchProducts();
   }, []);
 
   // Cập nhật trạng thái hiển thị của nút qua lại khi dữ liệu đã load xong
   useEffect(() => {
     if (!isLoading) {
       checkScrollability();
-      
+
       // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
       setTimeout(() => {
         AOS.refresh();
@@ -108,20 +101,20 @@ export default function HomeList() {
     }
   }, [products, isLoading]);
 
-  // LỌC SẢN PHẨM: Sửa lại logic để không bị lỗi "Chưa có sản phẩm nào"
+  // LỌC SẢN PHẨM: Logic để không bị lỗi "Chưa có sản phẩm nào"
   const filteredProducts = products.filter(product => {
     if (currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') {
-      return true; 
+      return true;
     }
     if (product.categoryPath) {
-       return product.categoryPath === currentPath;
+      return product.categoryPath === currentPath;
     }
     return false;
   });
 
   const scroll = (direction) => {
     if (carouselRef.current) {
-      const scrollAmount = direction === 'left' ? -400 : 400; 
+      const scrollAmount = direction === 'left' ? -400 : 400;
       carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
@@ -135,13 +128,13 @@ export default function HomeList() {
   };
 
   return (
-    <div style={{ backgroundColor: '#fbfbfd', minHeight: '100vh', paddingBottom: '60px' }}> 
-      
+    <div style={{ backgroundColor: '#fbfbfd', minHeight: '100vh', paddingBottom: '60px' }}>
+
       <HomeTopbar />
 
       <div className="clothing-showcase-container">
         {(currentPath === '/' || currentPath === '/danh-sach-quan-ao' || currentPath === '/new-arrivals') && (
-            <AdsBanner images={bannerImages} />
+          <AdsBanner images={bannerImages} />
         )}
 
         <div className="clothing-header" data-aos="fade-up">
@@ -157,7 +150,7 @@ export default function HomeList() {
           </div>
         ) : filteredProducts.length > 0 ? (
           <div className="clothing-carousel-wrapper">
-            
+
             {canScrollLeft && (
               <button className="clothing-nav-btn left" onClick={() => scroll('left')}>
                 ❮
@@ -167,12 +160,12 @@ export default function HomeList() {
             <div className="clothing-track" ref={carouselRef} onScroll={checkScrollability}>
               {filteredProducts.map((product) => (
                 <Link to={`/san-pham/${product.id}`} key={product.id} className="clothing-card">
-                  
+
                   {/* 1. ẢNH TRÊN CÙNG */}
                   <div className="clothing-image-box">
-                    <img src={product.image} alt={product.name} /> 
+                    <img src={product.image} alt={product.name} />
                   </div>
-                  
+
                   {/* 2. THÔNG TIN SẢN PHẨM Ở DƯỚI */}
                   <div className="clothing-info">
                     {/* Hiện chữ MỚI màu cam nếu isNew = true */}

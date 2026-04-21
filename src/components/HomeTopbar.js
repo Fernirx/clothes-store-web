@@ -118,12 +118,13 @@ export default function HomeTopbar() {
 
       {/* 3. GIỎ HÀNG & USER / LOGIN */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        
+
         {/* Giỏ hàng */}
-        <div 
+        <div
           style={{ cursor: 'pointer', fontSize: '18px', position: 'relative' }}
           onMouseEnter={() => setIsHoverCart(true)}
           onMouseLeave={() => setIsHoverCart(false)}
+          onClick={() => navigate('/cart')} // <--- ĐÃ THÊM DÒNG NÀY ĐỂ CHUYỂN TRANG
         >
           🛒
           {totalQuantity > 0 && (
@@ -221,6 +222,30 @@ export default function HomeTopbar() {
                   onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
                   Đăng xuất
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); 
+                    setShowLogout(false); 
+                    navigate('/dashboard'); 
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    backgroundColor: 'transparent',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    textAlign: 'left',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  Admin
                 </button>
               </div>
             )}
