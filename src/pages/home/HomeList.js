@@ -37,18 +37,14 @@ export default function HomeList() {
         setIsLoading(true);
 
         // BƯỚC 1: Lấy danh sách sản phẩm
-        const accessToken = localStorage.getItem("accessToken");
-
-        // Tạo headers động - chỉ thêm Authorization nếu có token
-        const headers = {
-          'Content-Type': 'application/json'
-        };
-        if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
-        }
+        // LƯU Ý: Đảm bảo API này là API mới nhất mà team bạn đang dùng. 
+        // Nếu team backend chốt dùng '/api/v1/products/active' thì bạn nhớ sửa lại URL nhé.
+        
 
         const productsResponse = await fetch(`${API_BASE_URL}/products`, {
-          headers: headers
+          headers: {
+
+          }
         });
 
         if (!productsResponse.ok) {
@@ -70,12 +66,13 @@ export default function HomeList() {
           }
 
           return {
-            id: product.id || product.slug,
+            id: product.id || product.slug, // Đề phòng trường hợp API không trả id thì dùng slug làm key
             name: product.name,
             tagline: product.description || 'Sản phẩm nổi bật.',
             price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
             isNew: product.isNew || false,
             image: coverImage,
+            // ĐÃ FIX LỖI Ở ĐÂY: Lấy categoryPath thực tế để chức năng lọc hoạt động
             categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null
           };
         });
@@ -97,7 +94,6 @@ export default function HomeList() {
     if (!isLoading) {
       checkScrollability();
 
-      // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
       setTimeout(() => {
         AOS.refresh();
       }, 100);
@@ -172,6 +168,7 @@ export default function HomeList() {
                   {/* 2. THÔNG TIN SẢN PHẨM Ở DƯỚI */}
                   <div className="clothing-info">
                     {/* Hiện chữ MỚI màu cam nếu isNew = true */}
+                    
                     {product.isNew && <span className="clothing-badge">MỚI</span>}
                     <h3 className="clothing-name">{product.name}</h3>
                     <p className="clothing-tagline">{product.tagline}</p>
