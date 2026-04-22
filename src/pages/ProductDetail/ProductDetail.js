@@ -24,10 +24,8 @@ export default function ProductDetail() {
     const fetchDetailData = async () => {
       try {
         setIsLoading(true);
-        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
         const response = await fetch(`${API_BASE_URL}/products/${slug}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`
           }
         });
 
