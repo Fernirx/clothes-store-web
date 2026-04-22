@@ -106,7 +106,7 @@ const Cart = () => {
           </div>
 
           <div className="cart-policy">
-            <p>📦 Đổi trả miễn phí cho thành viên cửa hàng. <u>Tìm hiểu thêm</u></p>
+            <p>Đổi trả miễn phí cho thành viên cửa hàng. <u>Tìm hiểu thêm</u></p>
           </div>
         </div>
 
