@@ -94,7 +94,6 @@ export default function HomeList() {
     if (!isLoading) {
       checkScrollability();
 
-      // SỬA LỖI TÀNG HÌNH: Làm mới AOS sau khi API trả về để nó tính toán lại chiều cao và hiện thẻ lên
       setTimeout(() => {
         AOS.refresh();
       }, 100);
@@ -169,6 +168,7 @@ export default function HomeList() {
                   {/* 2. THÔNG TIN SẢN PHẨM Ở DƯỚI */}
                   <div className="clothing-info">
                     {/* Hiện chữ MỚI màu cam nếu isNew = true */}
+                    
                     {product.isNew && <span className="clothing-badge">MỚI</span>}
                     <h3 className="clothing-name">{product.name}</h3>
                     <p className="clothing-tagline">{product.tagline}</p>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 export default function HomeTopbar() {
   const location = useLocation();
@@ -8,14 +9,9 @@ export default function HomeTopbar() {
   // State cho User Auth (Code hiện tại của bạn)
   const [user, setUser] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
-
-  // State cho Mini Cart (Code tải từ mạng về)
   const [isHoverCart, setIsHoverCart] = useState(false);
-  const cartItems = [
-    { id: 1, name: 'Áo thun Polo Blue', price: '250.000đ', quantity: 1, img: 'https://via.placeholder.com/40' },
-    { id: 2, name: 'Quần Jean Slimfit', price: '450.000đ', quantity: 1, img: 'https://via.placeholder.com/40' },
-  ];
-  const totalQuantity = cartItems.length;
+
+  const { cartCount: totalQuantity, resetCart } = useCart();
 
   // Lấy thông tin user từ localStorage khi component mount
   useEffect(() => {
@@ -50,13 +46,12 @@ export default function HomeTopbar() {
     }
   }, [showLogout]);
 
-  // Hàm đăng xuất
   const handleLogout = () => {
-    // Xoá thông tin user và tokens nhưng giữ lại các data khác
     localStorage.removeItem('user');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('accessToken');
     setUser(null);
+    resetCart();
     navigate('/danh-sach-quan-ao');
   };
 

@@ -164,7 +164,7 @@ export default function ProductDetail() {
                 <a href="#guide" style={{color: '#707072', textDecoration: 'none'}}>Bảng quy đổi kích cỡ</a>
               </div>
               <div className="size-grid">
-                {/* Dùng thẳng mảng cố định STANDARD_SIZES thay vì map data từ API */}
+                
                 {STANDARD_SIZES.map(size => {
                   const isAvailable = sizesForColor.includes(size); 
                   return (
