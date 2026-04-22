@@ -1,5 +1,6 @@
 import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
+import { CartProvider } from './context/CartContext';
 
 // Import các thành phần điều hướng và bảo vệ
 import ProtectedRoute from './components/route/ProtectedRoute';
@@ -93,6 +94,7 @@ function AdminLayout() {
 function App() {
   return (
     <Router>
+      <CartProvider>
       <Routes>
         {/* 1. PUBLIC ROUTES - Auth */}
         <Route path="/login" element={<Login />} />
@@ -131,6 +133,7 @@ function App() {
         {/* 4. GLOBAL 404 */}
         <Route path="*" element={<div style={{ padding: '50px', textAlign: 'center' }}><h1>404</h1><p>Trang web không tồn tại</p></div>} />
       </Routes>
+      </CartProvider>
     </Router>
   );
 }

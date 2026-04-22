@@ -37,14 +37,18 @@ export default function HomeList() {
         setIsLoading(true);
 
         // BƯỚC 1: Lấy danh sách sản phẩm
-        // LƯU Ý: Đảm bảo API này là API mới nhất mà team bạn đang dùng. 
-        // Nếu team backend chốt dùng '/api/v1/products/active' thì bạn nhớ sửa lại URL nhé.
-        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+        const accessToken = localStorage.getItem("accessToken");
+
+        // Tạo headers động - chỉ thêm Authorization nếu có token
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
 
         const productsResponse = await fetch(`${API_BASE_URL}/products`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
+          headers: headers
         });
 
         if (!productsResponse.ok) {
@@ -66,13 +70,12 @@ export default function HomeList() {
           }
 
           return {
-            id: product.id || product.slug, // Đề phòng trường hợp API không trả id thì dùng slug làm key
+            id: product.id || product.slug,
             name: product.name,
             tagline: product.description || 'Sản phẩm nổi bật.',
             price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
             isNew: product.isNew || false,
             image: coverImage,
-            // ĐÃ FIX LỖI Ở ĐÂY: Lấy categoryPath thực tế để chức năng lọc hoạt động
             categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null
           };
         });
