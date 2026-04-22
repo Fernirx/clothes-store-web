@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './ProductDetail.css';
 import Topbar from '../../components/HomeTopbar';
-import { addCartItem } from '../../api/cartApi';
 import { useCart } from '../../context/CartContext';
 
 const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
-
 const STANDARD_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 export default function ProductDetail() {
   const { id: slug } = useParams(); 
+  const { addToCart } = useCart(); // Lấy hàm addToCart từ Context
+
   const [productInfo, setProductInfo] = useState({});
   const [allVariants, setAllVariants] = useState([]);
   const [availableColors, setAvailableColors] = useState([]); 
@@ -20,18 +20,14 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [mainImgIndex, setMainImgIndex] = useState(0); 
   const [activeVariant, setActiveVariant] = useState(null); 
-  const { addToCart } = useCart();
-  
   const [isLoading, setIsLoading] = useState(true);
+
+  // 1. Tải chi tiết sản phẩm
   useEffect(() => {
     const fetchDetailData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${API_BASE_URL}/products/${slug}`, {
-          headers: {
-          }
-        });
-
+        const response = await fetch(`${API_BASE_URL}/products/${slug}`);
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
 
         const json = await response.json();
@@ -40,7 +36,6 @@ export default function ProductDetail() {
         if (data) {
           setProductInfo(data);
           setAllVariants(data.variants || []);
-
           const colorsWithImages = data.imagesByColor || [];
           setAvailableColors(colorsWithImages);
 
@@ -58,17 +53,17 @@ export default function ProductDetail() {
     if (slug) fetchDetailData();
   }, [slug]);
 
+  // 2. Cập nhật Size và Ảnh khi đổi Màu
   useEffect(() => {
     if (selectedColor && availableColors.length > 0) {
-      
       const variantsForColor = allVariants.filter(v => v.color === selectedColor);
       const availableSizesForThisColor = [...new Set(variantsForColor.map(v => v.size.toUpperCase()))];
       setSizesForColor(availableSizesForThisColor);
+      
       if (!availableSizesForThisColor.includes(selectedSize)) {
         setSelectedSize(''); 
       }
 
-      // 2.2 Cập nhật list ảnh
       const colorObj = availableColors.find(c => c.color === selectedColor);
       if (colorObj && colorObj.images) {
          const sortedImages = [...colorObj.images].sort((a, b) => (a.isPrimary === b.isPrimary) ? 0 : a.isPrimary ? -1 : 1);
@@ -76,14 +71,14 @@ export default function ProductDetail() {
       } else {
          setDisplayImages([]);
       }
-      
       setMainImgIndex(0); 
     }
   }, [selectedColor, availableColors, allVariants]);
+
+  // 3. Xác định Variant cụ thể khi chọn đủ Màu + Size
   useEffect(() => {
     if (selectedColor && selectedSize) {
       const matched = allVariants.find(
-        // Cần in hoa v.size lên để phòng ngừa API trả về chữ thường (vd: "s")
         v => v.color === selectedColor && v.size.toUpperCase() === selectedSize
       );
       setActiveVariant(matched || null);
@@ -91,7 +86,6 @@ export default function ProductDetail() {
       setActiveVariant(null);
     }
   }, [selectedColor, selectedSize, allVariants]);
-
 
   if (isLoading) return <div style={{ padding: '100px', textAlign: 'center' }}>Đang tải dữ liệu...</div>;
 
@@ -101,7 +95,6 @@ export default function ProductDetail() {
         <Topbar /> 
 
         <div className="product-detail-container">
-          
           <div className="product-gallery">
             <div className="thumbnail-list">
               {displayImages.map((img, index) => (
@@ -114,7 +107,6 @@ export default function ProductDetail() {
                 />
               ))}
             </div>
-            
             <div className="main-image">
               <img 
                  src={displayImages[mainImgIndex]?.imageUrl || 'https://placehold.co/600x800?text=No+Image'} 
@@ -170,7 +162,6 @@ export default function ProductDetail() {
                 <a href="#guide" style={{color: '#707072', textDecoration: 'none'}}>Bảng quy đổi kích cỡ</a>
               </div>
               <div className="size-grid">
-                
                 {STANDARD_SIZES.map(size => {
                   const isAvailable = sizesForColor.includes(size); 
                   return (
@@ -204,29 +195,34 @@ export default function ProductDetail() {
             </div>
 
             <div className="action-buttons">
-            <button 
-                    className="btn-add-cart"
-                    disabled={!activeVariant || activeVariant.stockQuantity <= 0}
-                    style={{
-                      opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
-                      cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
-                    }}
-                    onClick={async () => {
-                      try {
-                        // Gọi API gửi activeVariant.id và số lượng là 1 xuống Backend
-                        await addCartItem(activeVariant.id, 1);
-                        
-                        
-                        alert(`Đã thêm ${productInfo.name} (Màu: ${selectedColor}, Size: ${selectedSize}) vào giỏ hàng!`);
-                        
-                      } catch (error) {
-                        console.error(error);
-                        alert('Có lỗi xảy ra, không thể thêm vào giỏ hàng!');
-                      }
-                    }}
-                  >
-                    Thêm vào giỏ hàng
-         </button>
+              <button 
+                className="btn-add-cart"
+                disabled={!activeVariant || activeVariant.stockQuantity <= 0}
+                style={{
+                  opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
+                  cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
+                }}
+                onClick={async () => {
+                  try {
+                    // Ưu tiên lấy id hoặc variantId tùy theo cấu trúc Backend
+                    const variantIdToCart = activeVariant.id || activeVariant.variantId;
+
+                    if (!variantIdToCart) {
+                      alert("Không tìm thấy mã phiên bản sản phẩm!");
+                      return;
+                    }
+
+                    // Gọi hàm của Context để tự động thêm và refresh giỏ hàng
+                    await addToCart(variantIdToCart, 1);
+                    alert(`Đã thêm vào giỏ hàng: ${productInfo.name} - ${selectedColor} - Size ${selectedSize}`);
+                  } catch (error) {
+                    console.error("Lỗi thêm vào giỏ hàng:", error);
+                    alert(error.message || 'Thêm vào giỏ hàng thất bại!');
+                  }
+                }}
+              >
+                Thêm vào giỏ hàng
+              </button>
               <button 
                 className="btn-buy-now"
                 disabled={!activeVariant || activeVariant.stockQuantity <= 0}
@@ -242,7 +238,6 @@ export default function ProductDetail() {
             <div className="product-description" style={{ marginTop: '30px' }}>
               <p>{productInfo.description || 'Chưa có mô tả cho sản phẩm này.'}</p>
             </div>
-
           </div>
         </div>
       </div>
