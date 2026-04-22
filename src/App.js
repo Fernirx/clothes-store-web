@@ -95,44 +95,45 @@ function App() {
   return (
     <Router>
       <CartProvider>
-      <Routes>
-        {/* 1. PUBLIC ROUTES - Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/signup" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
+        <Routes>
+          {/* 1. PUBLIC ROUTES - Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/signup" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
 
-        {/* 2. PUBLIC ROUTES - Customer Pages */}
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/" element={<HomeList />} />
-        <Route path="/home" element={<HomeList />} />
-        <Route path="/new-arrivals" element={<HomeList />} />
-        <Route path="/danh-sach-quan-ao" element={<HomeList />} />
-        <Route path="/ao-thun" element={<HomeList />} />
-        <Route path="/quan-jean" element={<HomeList />} />
-        <Route path="/ao-khoac" element={<HomeList />} />
-        <Route path="/vay-dam" element={<HomeList />} />
-        <Route path="/phu-kien" element={<HomeList />} />
-        <Route path="/sale" element={<HomeList />} />
-        <Route path="/san-pham/:id" element={<ProductDetail />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failed" element={<PaymentFailed />} />
+          {/* 2. PUBLIC ROUTES - Customer Pages */}
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/" element={<HomeList />} />
+          <Route path="/home" element={<HomeList />} />
+          <Route path="/new-arrivals" element={<HomeList />} />
+          <Route path="/danh-sach-quan-ao" element={<HomeList />} />
+          <Route path="/ao-thun" element={<HomeList />} />
+          <Route path="/quan-jean" element={<HomeList />} />
+          <Route path="/ao-khoac" element={<HomeList />} />
+          <Route path="/vay-dam" element={<HomeList />} />
+          <Route path="/phu-kien" element={<HomeList />} />
+          <Route path="/sale" element={<HomeList />} />
+          <Route path="/san-pham/:id" element={<ProductDetail />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment/checkout" element={<Checkout />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failed" element={<PaymentFailed />} />
 
-        {/* 3. PROTECTED ROUTES - Admin Only */}
-        {/* LƯU Ý: allowedRoles chuyển thành 'ROLE_ADMIN' để khớp với Backend */}
-        <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
-          {/* Các form tách rời layout */}
-          <Route path="/products/form" element={<AddProductForm />} />
-          <Route path="/products/form/edit/:idProduct" element={<EditProductForm />} />
+          {/* 3. PROTECTED ROUTES - Admin Only */}
+          {/* LƯU Ý: allowedRoles chuyển thành 'ROLE_ADMIN' để khớp với Backend */}
+          <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
+            {/* Các form tách rời layout */}
+            <Route path="/products/form" element={<AddProductForm />} />
+            <Route path="/products/form/edit/:idProduct" element={<EditProductForm />} />
 
-          {/* Toàn bộ các trang có Sidebar/Topbar */}
-          <Route path="/*" element={<AdminLayout />} />
-        </Route>
+            {/* Toàn bộ các trang có Sidebar/Topbar */}
+            <Route path="/*" element={<AdminLayout />} />
+          </Route>
 
-        {/* 4. GLOBAL 404 */}
-        <Route path="*" element={<div style={{ padding: '50px', textAlign: 'center' }}><h1>404</h1><p>Trang web không tồn tại</p></div>} />
-      </Routes>
+          {/* 4. GLOBAL 404 */}
+          <Route path="*" element={<div style={{ padding: '50px', textAlign: 'center' }}><h1>404</h1><p>Trang web không tồn tại</p></div>} />
+        </Routes>
       </CartProvider>
     </Router>
   );

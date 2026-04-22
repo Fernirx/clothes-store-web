@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import './Cart.css';
 
 const Cart = () => {
+  const navigate = useNavigate();
   // Lấy thêm hàm updateQuantity và removeFromCart ra dùng
   const { cartItems, isLoading, error, updateQuantity, removeFromCart } = useCart();
-  
+
   const [totalAmount, setTotalAmount] = useState(0);
   const [selectedItems, setSelectedItems] = useState([]); // Lưu danh sách các item được tick
 
   // Hàm xử lý khi tick/bỏ tick checkbox
   const handleSelectItem = (itemId) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
+    setSelectedItems(prev =>
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId) // Bỏ tick
         : [...prev, itemId]                // Tick thêm
     );
@@ -67,20 +69,39 @@ const Cart = () => {
 
   const deliveryFee = totalAmount > 0 ? 50000 : 0; // Chỉ tính ship khi có chọn hàng
 
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      alert('Vui lòng chọn sản phẩm để thanh toán');
+      return;
+    }
+
+    // Chuẩn bị dữ liệu để gửi đến checkout
+    const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.id));
+
+    // Chuyển sang trang Checkout với thông tin các item được chọn
+    navigate('/payment/checkout', {
+      state: {
+        cartItems: selectedCartItems,
+        selectedItemIds: selectedItems,
+        totalAmount: totalAmount,
+      },
+    });
+  };
+
   return (
     <div className="clothing-cart-container">
       <div className="cart-content">
         {/* CỘT TRÁI: DANH SÁCH SẢN PHẨM */}
         <div className="cart-items-section">
           <h2 className="cart-heading">Giỏ hàng</h2>
-          
+
           <div className="cart-item-list">
             {items.map((item) => (
               <div key={item.id} className="cart-item" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                
+
                 {/* CHECKBOX CHỌN SẢN PHẨM */}
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={selectedItems.includes(item.id)}
                   onChange={() => handleSelectItem(item.id)}
                   style={{ width: '20px', height: '20px', cursor: 'pointer' }}
@@ -98,7 +119,7 @@ const Cart = () => {
                     <h3 className="item-name">{item.productName || 'Đang tải tên...'}</h3>
                     <span className="item-price">{formatPrice(item.price)}</span>
                   </div>
-                  
+
                   {/* Hiển thị Màu và Size lấy từ API */}
                   {item.color && <p className="item-attribute">Màu sắc: {item.color}</p>}
                   {item.size && <p className="item-attribute">Kích cỡ: {item.size}</p>}
@@ -106,35 +127,35 @@ const Cart = () => {
                   <div className="item-actions">
                     <div className="quantity-control">
                       {/* NÚT GIẢM */}
-                      <button 
-                        className="qty-btn" 
+                      <button
+                        className="qty-btn"
                         disabled={item.quantity <= 1}
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
                         -
                       </button>
-                      
+
                       <span className="qty-number">{item.quantity}</span>
-                      
+
                       {/* NÚT TĂNG */}
-                      <button 
+                      <button
                         className="qty-btn"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         +
                       </button>
                     </div>
-                    
+
                     <div className="action-icons">
                       {/* NÚT XÓA */}
-                      <button 
-                        className="icon-btn" 
+                      <button
+                        className="icon-btn"
                         title="Xóa"
                         onClick={() => {
-                          if(window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                          if (window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
                             removeFromCart(item.id);
                             // Nếu xóa thì bỏ luôn tick
-                            setSelectedItems(prev => prev.filter(id => id !== item.id)); 
+                            setSelectedItems(prev => prev.filter(id => id !== item.id));
                           }
                         }}
                       >
@@ -155,7 +176,7 @@ const Cart = () => {
         {/* CỘT PHẢI: TỔNG KẾT ĐƠN HÀNG */}
         <div className="cart-summary-section">
           <h2 className="summary-heading">Tổng quan đơn hàng</h2>
-          
+
           <div className="summary-row">
             <span>Tạm tính ({selectedItems.length} sản phẩm)</span>
             <span>{formatPrice(totalAmount)}</span>
@@ -164,18 +185,20 @@ const Cart = () => {
             <span>Phí giao hàng dự kiến</span>
             <span>{formatPrice(deliveryFee)}</span>
           </div>
-          
+
           <div className="summary-total">
             <span>Tổng cộng</span>
             <span>{formatPrice(totalAmount + deliveryFee)}</span>
           </div>
-          
+
           <div className="checkout-actions">
-            <button className="btn-checkout btn-guest" disabled={selectedItems.length === 0} style={{ opacity: selectedItems.length === 0 ? 0.5 : 1 }}>
-              Thanh toán Khách
-            </button>
-            <button className="btn-checkout btn-member" disabled={selectedItems.length === 0} style={{ opacity: selectedItems.length === 0 ? 0.5 : 1 }}>
-              Thanh toán Thành viên
+            <button
+              className="btn-checkout btn-guest"
+              disabled={selectedItems.length === 0}
+              onClick={handleCheckout}
+              style={{ opacity: selectedItems.length === 0 ? 0.5 : 1 }}
+            >
+              Thanh toán
             </button>
           </div>
         </div>
