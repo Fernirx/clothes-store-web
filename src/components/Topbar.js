@@ -9,7 +9,7 @@ export default function Topbar({ title = "Dashboard", buttonText = "+ Thêm mớ
 
   // 1. DANH SÁCH CÁC TRANG CẦN ẨN TÌM KIẾM VÀ NÚT THÊM
   // Mình đã thêm sẵn 3 trang dựa vào ảnh của bạn. Bạn có thể tự thêm bớt ở đây nhé!
-  const hiddenPaths = ['/users', '/brands', '/suppliers'];
+  const hiddenPaths = ['/users', '/brands', '/suppliers', '/categories '];
   
   // Kiểm tra xem URL hiện tại có nằm trong danh sách trên không
   const hideActions = hiddenPaths.includes(location.pathname);
@@ -49,7 +49,6 @@ export default function Topbar({ title = "Dashboard", buttonText = "+ Thêm mớ
 
   // Hàm đăng xuất
   const handleLogout = () => {
-    // Xoá thông tin user và tokens nhưng giữ lại các data khác
     localStorage.removeItem('user');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('accessToken');
@@ -65,10 +64,10 @@ export default function Topbar({ title = "Dashboard", buttonText = "+ Thêm mớ
       {!hideActions && (
         <div className="tb-search">
           <svg className="tb-si" width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+            {/* <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" /> */}
             <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input type="text" placeholder="Tìm kiếm..." />
+          {/* <input type="text" placeholder="Tìm kiếm..." /> */}
         </div>
       )}
 
