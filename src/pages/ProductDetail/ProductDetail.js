@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './ProductDetail.css';
 import Topbar from '../../components/HomeTopbar';
+import { useCart } from '../../context/CartContext';
 
 const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
 
@@ -9,6 +10,7 @@ const STANDARD_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 export default function ProductDetail() {
   const { id: slug } = useParams();
+  const { addToCart } = useCart();
   const [productInfo, setProductInfo] = useState({});
   const [allVariants, setAllVariants] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
@@ -18,6 +20,8 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [mainImgIndex, setMainImgIndex] = useState(0);
   const [activeVariant, setActiveVariant] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
 
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
@@ -205,16 +209,28 @@ export default function ProductDetail() {
             <div className="action-buttons">
               <button
                 className="btn-add-cart"
-                disabled={!activeVariant || activeVariant.stockQuantity <= 0}
+                disabled={!activeVariant || activeVariant.stockQuantity <= 0 || isAddingToCart}
                 style={{
-                  opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
-                  cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
+                  opacity: (!activeVariant || activeVariant.stockQuantity <= 0 || isAddingToCart) ? 0.5 : 1,
+                  cursor: (!activeVariant || activeVariant.stockQuantity <= 0 || isAddingToCart) ? 'not-allowed' : 'pointer'
                 }}
-                onClick={() => {
-                  alert(`Đã thêm ${productInfo.name} (Màu: ${selectedColor}, Size: ${selectedSize}) vào giỏ hàng!`);
+                onClick={async () => {
+                  if (!activeVariant) return;
+                  try {
+                    setIsAddingToCart(true);
+                    setCartMessage('');
+                    await addToCart(activeVariant.id, 1);
+                    setCartMessage(`✅ Đã thêm ${productInfo.name} vào giỏ hàng!`);
+                    setTimeout(() => setCartMessage(''), 3000);
+                  } catch (error) {
+                    setCartMessage(`❌ Lỗi: ${error.message || 'Không thể thêm vào giỏ hàng'}`);
+                    setTimeout(() => setCartMessage(''), 3000);
+                  } finally {
+                    setIsAddingToCart(false);
+                  }
                 }}
               >
-                Thêm vào giỏ hàng
+                {isAddingToCart ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
               </button>
               <button
                 className="btn-buy-now"
@@ -227,6 +243,20 @@ export default function ProductDetail() {
                 Mua ngay
               </button>
             </div>
+
+            {cartMessage && (
+              <div style={{
+                marginTop: '15px',
+                padding: '10px 15px',
+                backgroundColor: cartMessage.includes('✅') ? '#f0fdf4' : '#fef2f2',
+                color: cartMessage.includes('✅') ? '#10b981' : '#ef4444',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}>
+                {cartMessage}
+              </div>
+            )}
 
             <div className="product-description" style={{ marginTop: '30px' }}>
               <p>{productInfo.description || 'Chưa có mô tả cho sản phẩm này.'}</p>
