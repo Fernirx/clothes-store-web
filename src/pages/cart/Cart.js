@@ -1,53 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useCart } from '../../context/CartContext';
 import './Cart.css';
 
 const Cart = () => {
-  // Dữ liệu cứng mô phỏng theo cấu trúc API của bạn
-  // Đã thêm một số trường phụ (imageUrl, color, size) để render giao diện giống Nike
-  const [cartData, setCartData] = useState({
-    message: "Lấy giỏ hàng thành công",
-    data: {
-      cartId: 101,
-      guestToken: "guest_abc123xyz",
-      items: [
-        {
-          id: 1,
-          variantId: 1001,
-          productName: "Áo Thun Thể Thao D-Crey",
-          quantity: 1,
-          price: 450000,
-          subtotal: 450000,
-          // Extra UI data
-          imageUrl: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-          color: "Trắng/Đen",
-          size: "L"
-        },
-        {
-          id: 2,
-          variantId: 1005,
-          productName: "Quần Baggy D-Crey Nữ",
-          quantity: 2,
-          price: 550000,
-          subtotal: 1100000,
-          // Extra UI data
-          imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-          color: "Trắng kem",
-          size: "M"
-        }
-      ],
-      totalAmount: 1550000,
-      totalItems: 3
-    },
-    timestamp: "2026-04-21T14:46:03.477Z"
-  });
+  const { cartItems, isLoading, error, refreshCart } = useCart();
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  const { items, totalAmount } = cartData.data;
-  const deliveryFee = 50000; // Phí ship giả định
+  // Tải lại giỏ hàng khi component mount
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
 
+  // Tính toán tổng tiền
+  useEffect(() => {
+    if (cartItems && cartItems.length > 0) {
+      const total = cartItems.reduce((sum, item) => sum + (item.subtotal || item.price * item.quantity), 0);
+      setTotalAmount(total);
+    } else {
+      setTotalAmount(0);
+    }
+  }, [cartItems]);
+
+  const items = cartItems || [];
   // Hàm format tiền tệ VNĐ
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
+
+  // Hiển thị loading
+  if (isLoading) {
+    return (
+      <div className="clothing-cart-container">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <p>Đang tải giỏ hàng...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Hiển thị lỗi
+  if (error) {
+    return (
+      <div className="clothing-cart-container">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <p style={{ color: 'red' }}>Lỗi: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Giỏ hàng trống
+  if (!items || items.length === 0) {
+    return (
+      <div className="clothing-cart-container">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <h2>Giỏ hàng của bạn đang trống</h2>
+          <p>Hãy thêm sản phẩm vào giỏ hàng</p>
+        </div>
+      </div>
+    );
+  }
+
+  const deliveryFee = 50000; // Phí ship giả định
 
   return (
     <div className="clothing-cart-container">
@@ -59,17 +73,21 @@ const Cart = () => {
           <div className="cart-item-list">
             {items.map((item) => (
               <div key={item.id} className="cart-item">
-                <img src={item.imageUrl} alt={item.productName} className="cart-item-image" />
-                
+                <img
+                  src={item.imageUrl || 'https://placehold.co/200x200/e2e8f0/64748b?text=No+Image'}
+                  alt={item.productName}
+                  className="cart-item-image"
+                />
+
                 <div className="cart-item-details">
                   <div className="item-header">
                     <h3 className="item-name">{item.productName}</h3>
                     <span className="item-price">{formatPrice(item.price)}</span>
                   </div>
                   
-                  <p className="item-attribute">Màu sắc: {item.color}</p>
-                  <p className="item-attribute">Kích cỡ: {item.size}</p>
-                  
+                  {item.color && <p className="item-attribute">Màu sắc: {item.color}</p>}
+                  {item.size && <p className="item-attribute">Kích cỡ: {item.size}</p>}
+
                   <div className="item-actions">
                     <div className="quantity-control">
                       <button className="qty-btn">-</button>

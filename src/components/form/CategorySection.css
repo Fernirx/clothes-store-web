@@ -1,0 +1,214 @@
+/* CSS Variables */
+:root {
+  --category-bg: #ffffff;
+  --category-surface: #f5f5f5;
+  --category-border: #e0e0e0;
+  --category-text: #1a1916;
+  --category-muted: #999999;
+  --category-accent: #2d5a3d;
+  --category-radius: 4px;
+  --category-radius-lg: 8px;
+}
+
+/* Main Card Container */
+.category-card {
+  background: var(--category-bg);
+  border: 1px solid var(--category-border);
+  border-radius: var(--category-radius-lg);
+  padding: 24px;
+}
+
+.category-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--category-muted);
+  margin-bottom: 20px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Category List */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--category-surface);
+  border: 1px solid var(--category-border);
+  border-bottom: none;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--category-text);
+  transition: all 0.2s ease;
+}
+
+.category-item:first-child {
+  border-radius: var(--category-radius-lg) var(--category-radius-lg) 0 0;
+}
+
+.category-item:last-child {
+  border-bottom: 1px solid var(--category-border);
+  border-radius: 0 0 var(--category-radius-lg) var(--category-radius-lg);
+}
+
+.category-item:hover {
+  background-color: #f0f0f0;
+}
+
+.category-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--category-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.category-name {
+  display: block;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.category-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--category-muted);
+  margin-top: 4px;
+}
+
+/* Buttons Container */
+.category-item-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Primary Button */
+.btn-primary {
+  background: var(--category-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--category-radius);
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #234830;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-primary:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: var(--category-surface);
+  color: var(--category-text);
+  border: 1px solid var(--category-border);
+  border-radius: var(--category-radius);
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary:hover {
+  border-color: var(--category-accent);
+  background: #ffffff;
+}
+
+.btn-secondary:active {
+  transform: translateY(1px);
+}
+
+/* Counter Text */
+.category-counter {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--category-muted);
+}
+
+/* Loading State */
+.category-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--category-muted);
+  font-size: 14px;
+}
+
+/* Empty State */
+.category-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--category-muted);
+  font-size: 14px;
+}
+
+/* Error State */
+.category-error {
+  color: #d32f2f;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: var(--category-radius);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .category-card {
+    padding: 16px;
+  }
+
+  .category-item {
+    padding: 10px 12px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .category-item-buttons {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
