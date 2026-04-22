@@ -94,11 +94,10 @@ function ProductVariantForm({
                                             </td>
                                             <td>
                                                 <span
-                                                    className={`edit-product-page__stock-num ${
-                                                        item.stock <= (item.minStockLevel ?? 5)
-                                                            ? "edit-product-page__stock-num--low"
-                                                            : "edit-product-page__stock-num--ok"
-                                                    }`}
+                                                    className={`edit-product-page__stock-num ${item.stock <= (item.minStockLevel ?? 5)
+                                                        ? "edit-product-page__stock-num--low"
+                                                        : "edit-product-page__stock-num--ok"
+                                                        }`}
                                                 >
                                                     {item.stock}
                                                 </span>
@@ -123,11 +122,10 @@ function ProductVariantForm({
                                             <td>
                                                 <button
                                                     type="button"
-                                                    className={`edit-product-page__toggle ${
-                                                        item.active
-                                                            ? "edit-product-page__toggle--on"
-                                                            : ""
-                                                    }`}
+                                                    className={`edit-product-page__toggle ${item.active
+                                                        ? "edit-product-page__toggle--on"
+                                                        : ""
+                                                        }`}
                                                     onClick={() => toggleVariantActive(item.id)}
                                                 />
                                             </td>
@@ -159,9 +157,8 @@ function ProductVariantForm({
             </section>
 
             <div
-                className={`edit-product-page__modal-overlay ${
-                    isVariantModalOpen ? "edit-product-page__modal-overlay--open" : ""
-                }`}
+                className={`edit-product-page__modal-overlay ${isVariantModalOpen ? "edit-product-page__modal-overlay--open" : ""
+                    }`}
                 onClick={(e) => {
                     if (e.target === e.currentTarget) {
                         closeVariantModal();
@@ -388,11 +385,10 @@ function ProductVariantForm({
                                 {modalImages.map((img, index) => (
                                     <div
                                         key={img.id}
-                                        className={`edit-product-page__img-thumb edit-product-page__img-thumb--small ${
-                                            img.primary
-                                                ? "edit-product-page__img-thumb--primary"
-                                                : ""
-                                        }`}
+                                        className={`edit-product-page__img-thumb edit-product-page__img-thumb--small ${img.primary
+                                            ? "edit-product-page__img-thumb--primary"
+                                            : ""
+                                            }`}
                                         onClick={() => setModalPrimary(index)}
                                     >
                                         <img

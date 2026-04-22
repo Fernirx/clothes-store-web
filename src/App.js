@@ -1,30 +1,32 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 
 // Import các thành phần điều hướng và bảo vệ
+import ProtectedRoute from './components/route/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
-import ProtectedRoute from './components/route/ProtectedRoute';
 
 // Import Pages (Admin & Auth)
-import Dashboard from './pages/dashboard/Dashboard';
-import OrderList from './pages/orders/OrderList';
-import Coupons from './pages/coupons/Coupons';
-import ProductList from './pages/products/ProductList';
-import Reviews from './pages/reviews/Reviews';
-import Users from './pages/users/Users';
-import Suppliers from './pages/suppliers/Suppliers';
-import Brands from './pages/brands/Brands';
-import Notifications from './pages/notifications/Notifications';
-import Inventory from './pages/inventory/Inventory';
-import Login from './pages/auth/login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
+import Coupons from './pages/coupons/Coupons';
+import Dashboard from './pages/dashboard/Dashboard';
+import Inventory from './pages/inventory/Inventory';
+import OrderList from './pages/orders/OrderList';
+import ProductList from './pages/products/ProductList';
+import Reviews from './pages/reviews/Reviews';
+import Suppliers from './pages/suppliers/Suppliers';
+import Users from './pages/users/Users';
+import Brands from './pages/brands/Brands';
+import Notifications from './pages/notifications/Notifications';
+import Login from './pages/auth/login';
 import Cart from './pages/cart/Cart';
 
 // Import Pages (Customer)
 import HomeList from './pages/home/HomeList';
+import Checkout from './pages/payment/Checkout';
+import PaymentFailed from './pages/payment/PaymentFailed';
+import PaymentSuccess from './pages/payment/PaymentSuccess';
 import ProductDetail from './pages/ProductDetail/ProductDetail';
 
 // Import Forms
@@ -99,7 +101,7 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOTP />} />
 
         {/* 2. PUBLIC ROUTES - Customer Pages */}
-          <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/" element={<HomeList />} />
         <Route path="/home" element={<HomeList />} />
         <Route path="/new-arrivals" element={<HomeList />} />
@@ -111,6 +113,9 @@ function App() {
         <Route path="/phu-kien" element={<HomeList />} />
         <Route path="/sale" element={<HomeList />} />
         <Route path="/san-pham/:id" element={<ProductDetail />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/failed" element={<PaymentFailed />} />
 
         {/* 3. PROTECTED ROUTES - Admin Only */}
         {/* LƯU Ý: allowedRoles chuyển thành 'ROLE_ADMIN' để khớp với Backend */}

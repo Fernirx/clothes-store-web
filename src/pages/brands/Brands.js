@@ -13,16 +13,27 @@ export default function Brands() {
 	const [brands, setBrands] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [editingId, setEditingId] = useState(null);
+	const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
 	const [formData, setFormData] = useState({
 		name: '',
 		slug: '',
 		description: '',
 		logoUrl: '',
+		logoPublicId: '',
 		isActive: true
 	});
 
-	const apiUrl = process.env.REACT_APP_ROOT_API || 'https://clothes-api.fernirx.io.vn/api/clothes/';
+	const [page, setPage] = useState(0);
+	const [size, setSize] = useState(10);
+	const [totalPages, setTotalPages] = useState(0);
+	const [totalElements, setTotalElements] = useState(0);
+	const [searchTerm, setSearchTerm] = useState('');
+	const [statusFilter, setStatusFilter] = useState('');
+	const [sortBy, setSortBy] = useState('id');
+	const [sortDir, setSortDir] = useState('asc');
+
+	const apiUrl = process.env.REACT_APP_ROOT_API || 'https://clothes-api.fernirx.io.vn/api/clothes';
 
 	// =========================================================
 	// HÀM CHUNG:
@@ -39,7 +50,7 @@ export default function Brands() {
 			headers: {
 				Accept: 'application/json',
 				...(options.headers || {}),
-				Authorization: `Bearer ${accessToken}`,
+				...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
 			},
 		});
 
@@ -70,54 +81,141 @@ export default function Brands() {
 		return response;
 	}, []);
 
+	const fetchBrands = useCallback(async (signal) => {
+		try {
+			setIsLoading(true);
+
+			const params = new URLSearchParams({
+				page: String(page),
+				size: String(size),
+				sort: `${sortBy},${sortDir}`
+			});
+
+			if (searchTerm.trim()) {
+				params.set('search', searchTerm.trim());
+			}
+
+			if (statusFilter !== '') {
+				params.set('isActive', statusFilter === 'true' ? 'true' : 'false');
+			}
+
+			const response = await fetchWithAuthRetry(`${apiUrl}/admin/brands?${params.toString()}`, {
+				signal,
+				method: 'GET',
+			});
+
+			if (!response.ok) {
+				const errorData = await parseJsonSafe(response);
+				throw new Error(errorData?.message || ('HTTP error ' + response.status));
+			}
+
+			const result = await response.json();
+			if (result?.data?.content) {
+				setBrands(result.data.content);
+				setTotalPages(result.data.totalPages || 0);
+				setTotalElements(result.data.totalElements || 0);
+			} else if (Array.isArray(result?.data)) {
+				setBrands(result.data);
+				setTotalPages(1);
+				setTotalElements(result.data.length);
+			} else {
+				setBrands([]);
+				setTotalPages(0);
+				setTotalElements(0);
+			}
+		} catch (error) {
+			if (error?.name === 'AbortError') return;
+			console.error('Lỗi khi lấy dữ liệu thương hiệu:', error);
+			setBrands([]);
+			setTotalPages(0);
+			setTotalElements(0);
+		} finally {
+			if (!signal || !signal.aborted) {
+				setIsLoading(false);
+			}
+		}
+	}, [apiUrl, fetchWithAuthRetry, page, searchTerm, size, sortBy, sortDir, statusFilter]);
+
 	useEffect(() => {
 		const controller = new AbortController();
-
-		const fetchBrands = async () => {
-			try {
-				setIsLoading(true);
-
-				const response = await fetchWithAuthRetry(`${apiUrl}/brands`, {
-					signal: controller.signal,
-					method: 'GET',
-				});
-
-				if (!response.ok) {
-					throw new Error('HTTP error ' + response.status);
-				}
-
-				const result = await response.json();
-
-				if (result.data && result.data.content) {
-					setBrands(result.data.content);
-				} else if (Array.isArray(result.data)) {
-					setBrands(result.data);
-				} else {
-					setBrands([]);
-				}
-			} catch (error) {
-				if (error.name === 'AbortError') return;
-				console.error('Lỗi khi lấy dữ liệu thương hiệu:', error);
-			} finally {
-				if (!controller.signal.aborted) {
-					setIsLoading(false);
-				}
-			}
-		};
-
-		fetchBrands();
-
+		fetchBrands(controller.signal);
 		return () => {
 			controller.abort();
 		};
-	}, [apiUrl, fetchWithAuthRetry]);
+	}, [fetchBrands]);
 
 	const handleInputChange = (e) => {
 		const { name, value, type, checked } = e.target;
+		const nextValue = type === 'checkbox' ? checked : value;
 		setFormData((prev) => ({
 			...prev,
-			[name]: type === 'checkbox' ? checked : value
+			[name]: nextValue,
+			...(name === 'logoUrl' ? { logoPublicId: '' } : {})
 		}));
+	};
+
+	const handleLogoFileUpload = async (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		setIsUploadingLogo(true);
+		try {
+			const form = new FormData();
+			form.append('file', file);
+
+			const response = await fetchWithAuthRetry(`${apiUrl}/media/image?context=BRAND`, {
+				method: 'POST',
+				headers: { Accept: 'application/json' },
+				body: form
+			});
+
+			if (!response.ok) {
+				const errorData = await parseJsonSafe(response);
+				throw new Error(errorData?.message || ('Upload ảnh thất bại, mã lỗi: ' + response.status));
+			}
+
+			const result = await response.json();
+			const imageUrl = result?.data?.imageUrl || '';
+			const publicId = result?.data?.publicId || '';
+
+			if (!imageUrl) {
+				throw new Error('Media API chưa trả về imageUrl.');
+			}
+
+			setFormData((prev) => ({
+				...prev,
+				logoUrl: imageUrl,
+				logoPublicId: publicId
+			}));
+
+			alert('Upload logo thành công!');
+		} catch (error) {
+			console.error('Lỗi khi upload logo:', error);
+			alert(error.message || 'Đã xảy ra lỗi khi upload logo. Vui lòng thử lại!');
+		} finally {
+			setIsUploadingLogo(false);
+			e.target.value = '';
+		}
+	};
+
+	const handleSearchChange = (e) => {
+		setSearchTerm(e.target.value);
+		setPage(0);
+	};
+
+	const handleStatusFilterChange = (e) => {
+		setStatusFilter(e.target.value);
+		setPage(0);
+	};
+
+	const handleSortChange = (field) => {
+		if (sortBy === field) {
+			setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+		} else {
+			setSortBy(field);
+			setSortDir('asc');
+		}
+		setPage(0);
 	};
 
 	const handleEditClick = (brand) => {
@@ -127,6 +225,7 @@ export default function Brands() {
 			slug: brand.slug || '',
 			description: brand.description || '',
 			logoUrl: brand.logoUrl || '',
+			logoPublicId: brand.logoPublicId || '',
 			isActive: brand.isActive !== undefined ? brand.isActive : true
 		});
 		window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -139,6 +238,7 @@ export default function Brands() {
 			slug: '',
 			description: '',
 			logoUrl: '',
+			logoPublicId: '',
 			isActive: true
 		});
 	};
@@ -162,14 +262,16 @@ export default function Brands() {
 			slug: formData.slug.trim(),
 			description: formData.description.trim(),
 			logoUrl: formData.logoUrl.trim(),
+			logoPublicId: formData.logoPublicId.trim(),
 		};
 
 		if (editingId) {
 			try {
 				const response = await fetchWithAuthRetry(`${apiUrl}/admin/brands/${editingId}`, {
-					method: 'PUT',
+					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json',
+						Accept: 'application/json'
 					},
 					body: JSON.stringify(payload)
 				});
@@ -181,14 +283,13 @@ export default function Brands() {
 
 				const result = await response.json();
 				const updatedBrand = result?.data || { ...payload, id: editingId };
-
-				const updatedBrands = brands.map((brand) =>
+				setBrands((prev) => prev.map((brand) =>
 					brand.id === editingId ? { ...brand, ...updatedBrand } : brand
-				);
-				setBrands(updatedBrands);
+				));
 
 				alert(`Đã cập nhật thành công thương hiệu: ${payload.name}`);
 				handleCancelEdit();
+				fetchBrands();
 			} catch (error) {
 				console.error('Lỗi khi cập nhật thương hiệu:', error);
 				alert(error.message || 'Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại!');
@@ -199,6 +300,7 @@ export default function Brands() {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
+						Accept: 'application/json'
 					},
 					body: JSON.stringify(payload)
 				});
@@ -210,10 +312,10 @@ export default function Brands() {
 
 				const result = await response.json();
 				const newBrand = result.data || { ...payload, id: Date.now() };
-
-				setBrands([newBrand, ...brands]);
-				setFormData({ name: '', slug: '', description: '', logoUrl: '', isActive: true });
+				setBrands((prev) => [newBrand, ...prev]);
+				setFormData({ name: '', slug: '', description: '', logoUrl: '', logoPublicId: '', isActive: true });
 				alert(`Đã thêm thành công thương hiệu: ${payload.name}`);
+				fetchBrands();
 			} catch (error) {
 				console.error('Lỗi khi thêm thương hiệu:', error);
 				alert(error.message || 'Đã xảy ra lỗi khi thêm. Vui lòng thử lại!');
@@ -229,6 +331,7 @@ export default function Brands() {
 		try {
 			const response = await fetchWithAuthRetry(`${apiUrl}/admin/brands/${id}`, {
 				method: 'DELETE',
+				headers: { Accept: 'application/json' }
 			});
 
 			if (!response.ok) {
@@ -238,14 +341,14 @@ export default function Brands() {
 				return;
 			}
 
-			const updatedBrands = brands.filter((brand) => brand.id !== id);
-			setBrands(updatedBrands);
+			setBrands((prev) => prev.filter((brand) => brand.id !== id));
 
 			if (editingId === id) {
 				handleCancelEdit();
 			}
 
 			alert(`Đã xóa thành công thương hiệu ${name}`);
+			fetchBrands();
 		} catch (error) {
 			if (error?.name === 'AbortError') return;
 			console.error('Lỗi khi xóa thương hiệu:', error);
@@ -263,12 +366,21 @@ export default function Brands() {
 	return (
 		<div className="page-content">
 			<div className="filters" style={{ marginBottom: '10px' }}>
-				<select className="f-select" defaultValue="Trạng thái">
-					<option value="Trạng thái">Trạng thái</option>
-					<option value="Hoạt động">Hoạt động</option>
-					<option value="Ngừng">Ngừng</option>
+				<select
+					className="f-select"
+					value={statusFilter}
+					onChange={handleStatusFilterChange}
+				>
+					<option value="">Tất cả trạng thái</option>
+					<option value="true">Hoạt động</option>
+					<option value="false">Ngừng</option>
 				</select>
-				<input className="f-input" placeholder="Tìm tên, slug thương hiệu..." />
+				<input
+					className="f-input"
+					placeholder="Tìm tên, slug thương hiệu..."
+					value={searchTerm}
+					onChange={handleSearchChange}
+				/>
 			</div>
 
 			<form
@@ -316,6 +428,35 @@ export default function Brands() {
 					className="f-input"
 					style={{ flex: '1 1 220px' }}
 				/>
+				<label
+					style={{
+						flex: '1 1 200px',
+						display: 'flex',
+						alignItems: 'center',
+						gap: '8px',
+						fontSize: '13px',
+						whiteSpace: 'nowrap'
+					}}
+				>
+					<input
+						type="file"
+						accept="image/*"
+						onChange={handleLogoFileUpload}
+						disabled={isUploadingLogo}
+					/>
+					<span style={{ color: 'var(--muted)' }}>
+						{isUploadingLogo ? 'Đang upload...' : 'Upload logo'}
+					</span>
+				</label>
+				<input
+					type="text"
+					name="logoPublicId"
+					value={formData.logoPublicId}
+					onChange={handleInputChange}
+					placeholder="Logo Public ID"
+					className="f-input"
+					style={{ flex: '1 1 220px' }}
+				/>
 				<input
 					type="text"
 					name="description"
@@ -357,13 +498,23 @@ export default function Brands() {
 					<table>
 						<thead>
 							<tr>
-								<th>Thương hiệu</th>
-								<th>Slug</th>
+								<th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('name')}>
+									Thương hiệu {sortBy === 'name' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+								</th>
+								<th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('slug')}>
+									Slug {sortBy === 'slug' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+								</th>
 								<th>Mô tả</th>
 								<th>Logo</th>
-								<th>Trạng thái</th>
-								<th>Ngày tạo</th>
-								<th>Cập nhật</th>
+								<th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('isActive')}>
+									Trạng thái {sortBy === 'isActive' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+								</th>
+								<th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('createdAt')}>
+									Ngày tạo {sortBy === 'createdAt' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+								</th>
+								<th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSortChange('updatedAt')}>
+									Cập nhật {sortBy === 'updatedAt' && <span style={{ marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+								</th>
 								<th>Hành động</th>
 							</tr>
 						</thead>
@@ -424,6 +575,70 @@ export default function Brands() {
 							)}
 						</tbody>
 					</table>
+				</div>
+
+				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', padding: '10px 0', borderTop: '1px solid #e0e0e0' }}>
+					<div style={{ fontSize: '13px', color: 'var(--muted)' }}>
+						Hiển thị {brands.length > 0 ? (page * size + 1) : 0} - {Math.min((page + 1) * size, totalElements)} trong {totalElements} thương hiệu
+					</div>
+
+					<div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+						<button
+							onClick={() => setPage(Math.max(0, page - 1))}
+							disabled={page === 0}
+							style={{
+								padding: '6px 12px',
+								fontSize: '13px',
+								backgroundColor: page === 0 ? '#e0e0e0' : '#0d6efd',
+								color: page === 0 ? '#999' : 'white',
+								border: 'none',
+								borderRadius: '4px',
+								cursor: page === 0 ? 'not-allowed' : 'pointer'
+							}}
+						>
+							← Trước
+						</button>
+
+						<span style={{ padding: '0 8px', fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>
+							{totalPages > 0 ? `${page + 1} / ${totalPages}` : '—'}
+						</span>
+
+						<button
+							onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+							disabled={page >= totalPages - 1 || totalPages === 0}
+							style={{
+								padding: '6px 12px',
+								fontSize: '13px',
+								backgroundColor: page >= totalPages - 1 || totalPages === 0 ? '#e0e0e0' : '#0d6efd',
+								color: page >= totalPages - 1 || totalPages === 0 ? '#999' : 'white',
+								border: 'none',
+								borderRadius: '4px',
+								cursor: page >= totalPages - 1 || totalPages === 0 ? 'not-allowed' : 'pointer'
+							}}
+						>
+							Sau →
+						</button>
+
+						<select
+							value={size}
+							onChange={(e) => {
+								setSize(Number(e.target.value));
+								setPage(0);
+							}}
+							style={{
+								padding: '6px 8px',
+								fontSize: '13px',
+								border: '1px solid #ced4da',
+								borderRadius: '4px',
+								marginLeft: '10px'
+							}}
+						>
+							<option value="5">5 / trang</option>
+							<option value="10">10 / trang</option>
+							<option value="20">20 / trang</option>
+							<option value="50">50 / trang</option>
+						</select>
+					</div>
 				</div>
 			</div>
 		</div>
