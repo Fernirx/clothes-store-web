@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { refreshAuth } from '../../components/refresh/refresh';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -22,13 +23,24 @@ export default function ProductList() {
             Authorization: `Bearer ${accessToken}`
           }
         });
-        if (!response.ok) {
-          throw new Error("HTTP error " + response.status);
-        }
 
-        const result = await response.json();
-        if (result.data && result.data.content) {
-          setProducts(result.data.content);
+        if (response.status === 401) {
+          const refreshResult = await refreshAuth();
+
+          // refresh thất bại thì dừng luôn
+          if (!refreshResult) return;
+
+          // lấy accessToken mới sau khi refresh
+          accessToken = localStorage.getItem("accessToken");
+          // gọi lại API với token mới
+          fetchProducts();
+        }
+        else if (!response.ok) {
+          throw new Error("Lỗi khi lấy sản phẩm, mã lỗi: " + response.status);
+        }
+        else {
+          const data = await response.json();
+          setProducts(data.data.content);
         }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);

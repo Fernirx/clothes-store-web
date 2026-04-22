@@ -7,7 +7,7 @@ export const refreshAuth = async () => {
         }
 
         // Gọi API để lấy token mới
-        const response = await fetch('https://clothes-api.fernirx.io.vn/api/clothes/refresh-token', {
+        const response = await fetch('https://clothes-api.fernirx.io.vn/api/clothes/auth/refresh-token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken })
@@ -21,11 +21,7 @@ export const refreshAuth = async () => {
         // data trả về thường có dạng: { accessToken: '...', refreshToken: '...', user: {...} }
 
         // 1. Cập nhật lại localStorage
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) {
-            localStorage.setItem('refreshToken', data.refreshToken);
-        }
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('accessToken', data.data.accessToken);
 
         return data;
     } catch (error) {
