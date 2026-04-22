@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-
+import { useNavigate, useLocation } from 'react-router-dom'; // Thêm useLocation
 
 export default function Topbar({ title = "Dashboard", buttonText = "+ Thêm mới", onButtonClick }) {
   const navigate = useNavigate();
+  const location = useLocation(); // Lấy đường dẫn URL hiện tại
   const [user, setUser] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
+
+  // 1. DANH SÁCH CÁC TRANG CẦN ẨN TÌM KIẾM VÀ NÚT THÊM
+  // Mình đã thêm sẵn 3 trang dựa vào ảnh của bạn. Bạn có thể tự thêm bớt ở đây nhé!
+  const hiddenPaths = ['/users', '/brands', '/suppliers'];
+  
+  // Kiểm tra xem URL hiện tại có nằm trong danh sách trên không
+  const hideActions = hiddenPaths.includes(location.pathname);
 
   // Lấy thông tin user từ localStorage khi component mount
   useEffect(() => {
@@ -53,19 +60,28 @@ export default function Topbar({ title = "Dashboard", buttonText = "+ Thêm mớ
   return (
     <div className="topbar">
       <span className="tb-title">{title}</span>
-      <div className="tb-search">
-        <svg className="tb-si" width="13" height="13" viewBox="0 0 16 16" fill="none">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-        <input type="text" placeholder="Tìm kiếm..." />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <button className="btn" onClick={onButtonClick}>
-          {buttonText}
-        </button>
+      
+      {/* 2. CHỈ HIỂN THỊ THANH TÌM KIẾM NẾU KHÔNG NẰM TRONG DANH SÁCH ẨN */}
+      {!hideActions && (
+        <div className="tb-search">
+          <svg className="tb-si" width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <input type="text" placeholder="Tìm kiếm..." />
+        </div>
+      )}
 
-        {/* Hiển thị User Info hoặc Login Button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        
+        {/* 3. CHỈ HIỂN THỊ NÚT THÊM NẾU KHÔNG NẰM TRONG DANH SÁCH ẨN */}
+        {!hideActions && (
+          <button className="btn" onClick={onButtonClick}>
+            {buttonText}
+          </button>
+        )}
+
+        {/* Hiển thị User Info hoặc Login Button (Phần này luôn giữ nguyên) */}
         {user ? (
           <div
             style={{

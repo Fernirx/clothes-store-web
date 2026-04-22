@@ -281,7 +281,7 @@ export default function Users() {
             {/* Thanh Header: Tiêu đề & Cụm nút */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
-                    {isViewTrash ? 'Quản lý người dùng - Thùng rác' : 'Quản lý người dùng'}
+                    {isViewTrash ? 'Thùng rác' : ''}
                 </h2>
 
                 <div style={{ display: 'flex', gap: '10px' }}>
