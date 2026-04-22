@@ -15,7 +15,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import Inventory from './pages/inventory/Inventory';
 import OrderList from './pages/orders/OrderList';
 import ProductList from './pages/products/ProductList';
-import Reviews from './pages/reviews/Reviews';
+import Categories from './pages/categories/Categories';
 import Suppliers from './pages/suppliers/Suppliers';
 import Users from './pages/users/Users';
 import Brands from './pages/brands/Brands';
@@ -43,7 +43,7 @@ function AdminLayout() {
     "/orders": { title: "Quản lý đơn hàng", button: "+ Tạo đơn" },
     "/products": { title: "Quản lý sản phẩm", button: "+ Thêm sản phẩm" },
     "/coupons": { title: "Khuyến mãi / Coupon", button: "+ Tạo coupon" },
-    "/reviews": { title: "Đánh giá & Bình luận", button: "Xuất báo cáo" },
+    "/categories": { title: "Danh mục", button: "Xuất báo cáo" },
     "/users": { title: "Quản lý người dùng" },
     "/suppliers": { title: "Nhà cung cấp" },
     "/brands": { title: "Thương hiệu" },
@@ -77,7 +77,7 @@ function AdminLayout() {
             <Route path="/orders" element={<OrderList />} />
             <Route path="/coupons" element={<Coupons />} />
             <Route path="/products" element={<ProductList />} />
-            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/categories" element={<Categories />} />
             <Route path="/users" element={<Users />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/brands" element={<Brands />} />

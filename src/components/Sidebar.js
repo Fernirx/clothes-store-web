@@ -32,9 +32,9 @@ export default function Sidebar() {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
           Sản phẩm
         </NavLink>
-        <NavLink to="/reviews" className={({ isActive }) => isActive ? "sb-item on" : "sb-item"}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>
-          Đánh giá & Bình luận
+        <NavLink to="/categories" className={({ isActive }) => isActive ? "sb-item on" : "sb-item"}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="6" y="1" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="11" y="1" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="1" y="6" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="6" y="6" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="11" y="6" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="1" y="11" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="6" y="11" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/><rect x="11" y="11" width="3" height="3" stroke="currentColor" strokeWidth="1.4"/></svg>
+          Danh mục
         </NavLink>
 
         <div className="sb-sec">Kho hàng</div>
