@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./EditProductForm.css";
 import { useNavigate, useParams } from "react-router-dom";
 import ProductVariantForm from "./ProductVariantForm";
+import CategorySection from "./CategorySection";
 
 const INITIAL_COLOR_IMAGES = {
 };
@@ -64,6 +65,7 @@ function EditProductForm() {
     const [variants, setVariants] = useState([]);
     const [colorImages, setColorImages] = useState(INITIAL_COLOR_IMAGES);
     const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+    const [selectedCategoryCount, setSelectedCategoryCount] = useState(0);
 
     const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
     const [editingVariantId, setEditingVariantId] = useState(null);
@@ -123,6 +125,10 @@ function EditProductForm() {
 
     const showToast = (message) => {
         setToastMessage(`✓ ${message}`);
+    };
+
+    const handleCategorySaved = (categoryIds) => {
+        setSelectedCategoryCount(categoryIds ? categoryIds.length : 0);
     };
 
     const handleSaveBasicInfo = async () => {
@@ -950,6 +956,13 @@ function EditProductForm() {
                 dataProduct.imagesByColor || []
             );
             setColorImages(nextColorImages);
+
+            // cập nhật số danh mục
+            if (Array.isArray(dataProduct.categories)) {
+                setSelectedCategoryCount(dataProduct.categories.length);
+            } else {
+                setSelectedCategoryCount(0);
+            }
         } catch (error) {
             console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
             setProductError(error.message || "Không thể tải thông tin sản phẩm");
@@ -1044,6 +1057,19 @@ function EditProductForm() {
                     Hình ảnh
                     <span className="edit-product-page__tab-count">{imageCount}</span>
                 </button>
+
+                <button
+                    type="button"
+                    className={`edit-product-page__tab ${activeTab === TAB_KEYS.CATEGORIES
+                        ? "edit-product-page__tab--active"
+                        : ""
+                        }`}
+                    onClick={() => setActiveTab(TAB_KEYS.CATEGORIES)}
+                >
+                    Danh mục
+                    <span className="edit-product-page__tab-count">{selectedCategoryCount}</span>
+                </button>
+
             </div>
 
             <div className="edit-product-page__page">
@@ -1288,7 +1314,6 @@ function EditProductForm() {
                         isSavingVariant={isSavingVariant}
                     />
                 )}
-
                 {activeTab === TAB_KEYS.IMAGES && (
                     <section className="edit-product-page__card">
                         <div className="edit-product-page__card-title">
@@ -1389,6 +1414,14 @@ function EditProductForm() {
                             })
                         )}
                     </section>
+                )}
+
+                {activeTab === TAB_KEYS.CATEGORIES && (
+                    <CategorySection
+                        productId={idProduct}
+                        showToast={showToast}
+                        onSave={handleCategorySaved}
+                    />
                 )}
             </div>
 
