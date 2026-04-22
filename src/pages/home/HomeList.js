@@ -64,13 +64,12 @@ export default function HomeList() {
           }
 
           return {
-            id: product.id || product.slug, // Đề phòng trường hợp API không trả id thì dùng slug làm key
+            id: product.id || product.slug,
             name: product.name,
             tagline: product.description || 'Sản phẩm nổi bật.',
             price: product.basePrice ? `Từ ${product.basePrice.toLocaleString('vi-VN')}đ` : 'Liên hệ',
             isNew: product.isNew || false,
             image: coverImage,
-            // ĐÃ FIX LỖI Ở ĐÂY: Lấy categoryPath thực tế để chức năng lọc hoạt động
             categoryPath: product.categoryPath || (product.category && `/${product.category.slug}`) || null
           };
         });
