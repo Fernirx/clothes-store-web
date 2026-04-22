@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./EditProductForm.css";
 import { useNavigate, useParams } from "react-router-dom";
 import ProductVariantForm from "./ProductVariantForm";
@@ -674,13 +674,27 @@ function EditProductForm() {
         );
     };
 
-    const removeModalImage = (index) => {
+    const removeModalImage = (index, id) => {
         setModalImages((prev) => {
             const next = prev.filter((_, i) => i !== index);
             if (next.length > 0 && !next.some((img) => img.primary)) {
                 next[0].primary = true;
             }
-            return next;
+            // try { 
+            //     const response = await fetch(
+            //     `https://clothes-api.fernirx.io.vn/api/clothes/media/image`,
+            //     {
+            //         method: "DELETE",
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //         },
+            //         body: JSON.stringify({ publicId: id }),
+            //     }
+            // );
+            // } catch (error) {
+            //     console.error("Có lỗi xảy ra khi gọi API:", error);
+            // }
+            // return next;
         });
     };
 
