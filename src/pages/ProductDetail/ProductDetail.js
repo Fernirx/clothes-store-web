@@ -24,8 +24,11 @@ export default function ProductDetail() {
     const fetchDetailData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${API_BASE_URL}/products/${slug}`);
-        
+        const response = await fetch(`${API_BASE_URL}/products/${slug}`, {
+          headers: {
+          }
+        });
+
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
 
         const json = await response.json();
