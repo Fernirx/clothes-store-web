@@ -39,11 +39,11 @@ export default function HomeList() {
         // BƯỚC 1: Lấy danh sách sản phẩm
         // LƯU Ý: Đảm bảo API này là API mới nhất mà team bạn đang dùng. 
         // Nếu team backend chốt dùng '/api/v1/products/active' thì bạn nhớ sửa lại URL nhé.
-        const accessToken = localStorage.getItem("accessToken"); // lấy token từ localstorage
+        
 
         const productsResponse = await fetch(`${API_BASE_URL}/products`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`
+
           }
         });
 
