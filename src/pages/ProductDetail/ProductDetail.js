@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './ProductDetail.css';
 import Topbar from '../../components/HomeTopbar';
+import { addCartItem } from '../../api/cartApi';
+import { useCart } from '../../context/CartContext';
 
 const API_BASE_URL = 'https://clothes-api.fernirx.io.vn/api/clothes';
 
@@ -18,6 +20,7 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [mainImgIndex, setMainImgIndex] = useState(0); 
   const [activeVariant, setActiveVariant] = useState(null); 
+  const { addToCart } = useCart();
   
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
@@ -201,19 +204,29 @@ export default function ProductDetail() {
             </div>
 
             <div className="action-buttons">
-              <button 
-                className="btn-add-cart"
-                disabled={!activeVariant || activeVariant.stockQuantity <= 0}
-                style={{
-                  opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
-                  cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
-                }}
-                onClick={() => {
-                  alert(`Đã thêm ${productInfo.name} (Màu: ${selectedColor}, Size: ${selectedSize}) vào giỏ hàng!`);
-                }}
-              >
-                Thêm vào giỏ hàng
-              </button>
+            <button 
+                    className="btn-add-cart"
+                    disabled={!activeVariant || activeVariant.stockQuantity <= 0}
+                    style={{
+                      opacity: (!activeVariant || activeVariant.stockQuantity <= 0) ? 0.5 : 1,
+                      cursor: (!activeVariant || activeVariant.stockQuantity <= 0) ? 'not-allowed' : 'pointer'
+                    }}
+                    onClick={async () => {
+                      try {
+                        // Gọi API gửi activeVariant.id và số lượng là 1 xuống Backend
+                        await addCartItem(activeVariant.id, 1);
+                        
+                        
+                        alert(`Đã thêm ${productInfo.name} (Màu: ${selectedColor}, Size: ${selectedSize}) vào giỏ hàng!`);
+                        
+                      } catch (error) {
+                        console.error(error);
+                        alert('Có lỗi xảy ra, không thể thêm vào giỏ hàng!');
+                      }
+                    }}
+                  >
+                    Thêm vào giỏ hàng
+         </button>
               <button 
                 className="btn-buy-now"
                 disabled={!activeVariant || activeVariant.stockQuantity <= 0}
