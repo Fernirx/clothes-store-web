@@ -5,7 +5,6 @@ import PaymentLayout from "./PaymentLayout";
 const formatPrice = (value) => (value || 0).toLocaleString("vi-VN") + " đ";
 
 function PaymentSuccess() {
-  const navigate = useNavigate();
   const { state } = useLocation();
 
   return (
@@ -19,11 +18,8 @@ function PaymentSuccess() {
           <p>Tổng tiền: {formatPrice(state?.total_amount)}</p>
 
           <div className="payment-result-actions">
-            <button className="result-btn primary" onClick={() => navigate("/")}>
+            <button className="result-btn primary" onClick={() => (window.location.href = "/")}>
               Về trang chủ
-            </button>
-            <button className="result-btn secondary" onClick={() => navigate("/checkout")}>
-              Tạo đơn mới
             </button>
           </div>
         </div>

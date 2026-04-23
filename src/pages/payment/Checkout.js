@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Checkout.css";
 import PaymentLayout from "./PaymentLayout";
 
@@ -49,11 +49,18 @@ const fakeShippingFee = 30000;
 const fakeCouponDiscount = 40000;
 
 const formatPrice = (value) => {
+  if (value === undefined || value === null) return "0 đ";
   return value.toLocaleString("vi-VN") + " đ";
 };
 
 function Checkout() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Lấy dữ liệu từ Cart
+  const cartItems = location.state?.cartItems || [];
+  const selectedItemIds = location.state?.selectedItemIds || [];
+  const totalAmount = location.state?.totalAmount || 0;
 
   const [formData, setFormData] = useState({
     recipient_name: "",
@@ -63,52 +70,149 @@ function Checkout() {
     shipping_district: "",
     shipping_province: "",
     note: "",
+    coupon_code: "",
     payment_method: "COD"
   });
 
-  const orderItems = useMemo(() => {
-    return fakeCartItems.map((item) => {
-      const subtotal = item.unit_price * item.quantity - item.discount_amount;
-      return { ...item, subtotal };
-    });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Lấy thông tin user từ localStorage nếu có
+  useEffect(() => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      try {
+        const user = JSON.parse(userInfo);
+        setFormData(prev => ({
+          ...prev,
+          recipient_name: user.fullName || '',
+          recipient_phone: user.phone || '',
+        }));
+      } catch (e) {
+        console.error('Lỗi khi parse user info:', e);
+      }
+    }
   }, []);
 
+  // Lọc những item được chọn từ cart
+  const orderItems = useMemo(() => {
+    return cartItems
+      .filter(item => selectedItemIds.includes(item.id))
+      .map((item) => {
+        const price = item.price || item.unit_price || 0;
+        const subtotal = price * (item.quantity || 1);
+        return {
+          ...item,
+          subtotal,
+          price: price,
+          product_name: item.name || item.product_name || 'Sản phẩm',
+          product_code: item.code || item.product_code || '',
+          variant_size: item.size || item.variant_size || '',
+          variant_color: item.color || item.variant_color || '',
+          quantity: item.quantity || 1,
+          image: item.image || 'https://via.placeholder.com/100'
+        };
+      });
+  }, [cartItems, selectedItemIds]);
+
   const subtotal = useMemo(() => {
-    return orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+    const sum = orderItems.reduce((sum, item) => {
+      return sum + (item.subtotal || 0);
+    }, 0);
+    return isNaN(sum) ? 0 : sum;
   }, [orderItems]);
 
-  const shipping_fee = fakeShippingFee;
-  const discount_amount = fakeCouponDiscount;
+  const shipping_fee = totalAmount > 0 ? 50000 : 0;
+  const discount_amount = 0; // Tính từ coupon code nếu có
   const total_amount = subtotal + shipping_fee - discount_amount;
 
   const onChangeInput = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Xóa lỗi khi user sửa
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const onSubmitCheckout = (event) => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.recipient_name.trim()) newErrors.recipient_name = 'Vui lòng nhập tên';
+    if (!formData.recipient_phone.trim()) newErrors.recipient_phone = 'Vui lòng nhập số điện thoại';
+    if (!formData.shipping_street.trim()) newErrors.shipping_street = 'Vui lòng nhập địa chỉ';
+    if (!formData.shipping_ward.trim()) newErrors.shipping_ward = 'Vui lòng nhập phường/xã';
+    if (!formData.shipping_district.trim()) newErrors.shipping_district = 'Vui lòng nhập quận/huyện';
+    if (!formData.shipping_province.trim()) newErrors.shipping_province = 'Vui lòng nhập tỉnh/thành phố';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const onSubmitCheckout = async (event) => {
     event.preventDefault();
 
-    // Demo điều hướng: COD luôn thành công, VNPAY random thành công/thất bại.
-    if (formData.payment_method === "COD") {
+    if (!validateForm()) {
+      return;
+    }
+
+    if (selectedItemIds.length === 0) {
+      alert('Không có sản phẩm nào để thanh toán');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const accessToken = localStorage.getItem('accessToken');
+
+      const payload = {
+        selectedCartItemIds: selectedItemIds,
+        paymentMethod: formData.payment_method,
+        recipientName: formData.recipient_name,
+        recipientPhone: formData.recipient_phone,
+        shippingStreet: formData.shipping_street,
+        shippingWard: formData.shipping_ward,
+        shippingDistrict: formData.shipping_district,
+        shippingProvince: formData.shipping_province,
+        couponeCode: formData.coupon_code || null,
+        note: formData.note || null,
+      };
+
+      const response = await fetch(
+        'https://clothes-api.fernirx.io.vn/api/clothes/orders/checkout-selected',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Tạo đơn hàng thất bại');
+      }
+
+      console.log('Tạo đơn hàng thành công:', result);
+
+      // Chuyển sang trang thanh toán hoặc xác nhận đơn hàng
+      const orderId = result.data?.id || result.data?.orderId;
       navigate("/payment/success", {
         state: {
           total_amount,
           payment_method: formData.payment_method,
-          recipient_name: formData.recipient_name
+          recipient_name: formData.recipient_name,
+          order: result.data,
+          orderId: orderId
         }
       });
-      return;
+    } catch (error) {
+      console.error('Lỗi khi tạo đơn hàng:', error);
+      alert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+    } finally {
+      setLoading(false);
     }
-
-    const isSuccess = Math.random() > 0.3;
-    navigate(isSuccess ? "/payment/success" : "/payment/failed", {
-      state: {
-        total_amount,
-        payment_method: formData.payment_method,
-        recipient_name: formData.recipient_name
-      }
-    });
   };
 
   return (
@@ -233,6 +337,16 @@ function Checkout() {
               </div>
 
               <div className="field-group">
+                <label>Mã giảm giá</label>
+                <input
+                  name="coupon_code"
+                  value={formData.coupon_code}
+                  onChange={onChangeInput}
+                  placeholder="Nhập mã giảm giá (nếu có)"
+                />
+              </div>
+
+              <div className="field-group">
                 <label>Ghi chú</label>
                 <textarea
                   name="note"
@@ -288,8 +402,8 @@ function Checkout() {
                 </div>
               </div>
 
-              <button className="btn-checkout" type="submit">
-                Thanh toán ngay
+              <button className="btn-checkout" type="submit" disabled={loading}>
+                {loading ? 'Đang xử lý...' : 'Thanh toán ngay'}
               </button>
             </form>
           </section>
