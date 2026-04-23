@@ -1,6 +1,4 @@
 const API_BASE_URL = process.env.REACT_APP_ROOT_API || 'https://clothes-api.fernirx.io.vn/api/clothes';
-
-// 1. SỬA HÀM NÀY: Dùng UUID chuẩn thay vì 'guest_'
 function getOrCreateGuestToken() {
   let token = localStorage.getItem('guestToken');
   if (!token) {
@@ -15,7 +13,6 @@ function getOrCreateGuestToken() {
 export async function addCartItem(variantId, quantity = 1) {
   const accessToken = localStorage.getItem('accessToken');
   const body = JSON.stringify({ variantId, quantity });
-
   if (accessToken) {
     const res = await fetch(`${API_BASE_URL}/carts/items`, {
       method: 'POST',
