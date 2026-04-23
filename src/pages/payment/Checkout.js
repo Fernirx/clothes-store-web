@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
 import "./Checkout.css";
 import PaymentLayout from "./PaymentLayout";
 
@@ -56,6 +57,7 @@ const formatPrice = (value) => {
 function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshCart } = useCart();
 
   // Lấy dữ liệu từ Cart
   const cartItems = location.state?.cartItems || [];
@@ -196,20 +198,60 @@ function Checkout() {
 
       console.log('Tạo đơn hàng thành công:', result);
 
-      // Chuyển sang trang thanh toán hoặc xác nhận đơn hàng
+      // Lấy orderId từ response
       const orderId = result.data?.id || result.data?.orderId;
-      navigate("/payment/success", {
-        state: {
-          total_amount,
-          payment_method: formData.payment_method,
-          recipient_name: formData.recipient_name,
-          order: result.data,
-          orderId: orderId
+
+      // Refresh giỏ hàng sau khi thanh toán thành công
+      await refreshCart();
+
+      // Xử lý thanh toán theo phương thức
+      if (formData.payment_method === "VNPAY") {
+        // Gọi API tạo link thanh toán VNPAY
+        const accessToken = localStorage.getItem('accessToken');
+        const vnpayResponse = await fetch(
+          'https://clothes-api.fernirx.io.vn/api/clothes/payment/vnpay',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              orderId: orderId,
+              amount: total_amount,
+            }),
+          }
+        );
+
+        const vnpayResult = await vnpayResponse.json();
+
+        if (!vnpayResponse.ok) {
+          throw new Error(vnpayResult.message || 'Lấy link thanh toán VNPAY thất bại');
         }
-      });
+
+        console.log('Link VNPAY nhận được:', vnpayResult.data);
+
+        // Redirect sang link VNPAY
+        if (vnpayResult.data) {
+          window.location.href = vnpayResult.data;
+        } else {
+          throw new Error('Không nhận được link thanh toán VNPAY');
+        }
+      } else {
+        // COD - chuyển sang trang xác nhận
+        navigate("/payment/success", {
+          state: {
+            total_amount,
+            payment_method: formData.payment_method,
+            recipient_name: formData.recipient_name,
+            order: result.data,
+            orderId: orderId
+          }
+        });
+      }
     } catch (error) {
-      console.error('Lỗi khi tạo đơn hàng:', error);
-      alert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+      console.error('Lỗi khi xử lý thanh toán:', error);
+      alert(error.message || 'Có lỗi xảy ra khi xử lý thanh toán');
     } finally {
       setLoading(false);
     }
