@@ -5,7 +5,6 @@ import './Cart.css';
 
 const Cart = () => {
   const navigate = useNavigate();
-  // Lấy thêm hàm updateQuantity và removeFromCart ra dùng
   const { cartItems, isLoading, error, updateQuantity, removeFromCart } = useCart();
 
   const [totalAmount, setTotalAmount] = useState(0);
@@ -115,12 +114,10 @@ const Cart = () => {
 
                 <div className="cart-item-details" style={{ flex: 1 }}>
                   <div className="item-header">
-                    {/* Hiển thị Tên lấy từ API */}
                     <h3 className="item-name">{item.productName || 'Đang tải tên...'}</h3>
                     <span className="item-price">{formatPrice(item.price)}</span>
                   </div>
 
-                  {/* Hiển thị Màu và Size lấy từ API */}
                   {item.color && <p className="item-attribute">Màu sắc: {item.color}</p>}
                   {item.size && <p className="item-attribute">Kích cỡ: {item.size}</p>}
 
